@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# v2 — composer install WITH scripts (not dump-autoload-only); see docker/composer-install.sh
+# v3 — see docker/composer-install.sh (log must show "Florynn composer-install")
 
 FROM php:8.3-fpm-bookworm
 
@@ -31,10 +31,10 @@ COPY . .
 
 RUN npm ci && npm run build
 
-COPY docker/composer-install.sh /usr/local/bin/composer-install.sh
-RUN sed -i 's/\r$//' /usr/local/bin/composer-install.sh \
-    && chmod +x /usr/local/bin/composer-install.sh \
-    && INSTALL_DEV_DEPS="$INSTALL_DEV_DEPS" /usr/local/bin/composer-install.sh
+RUN echo "=== Florynn Docker build v3 ===" \
+    && sed -i 's/\r$//' /app/docker/composer-install.sh \
+    && chmod +x /app/docker/composer-install.sh \
+    && INSTALL_DEV_DEPS="$INSTALL_DEV_DEPS" /app/docker/composer-install.sh
 
 COPY docker/nginx-main.conf /etc/nginx/nginx.conf
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf

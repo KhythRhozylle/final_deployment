@@ -7,6 +7,8 @@ unset COMPOSER_DISABLE_PLUGINS 2>/dev/null || true
 
 INSTALL_DEV_DEPS="${INSTALL_DEV_DEPS:-0}"
 
+echo "=== Florynn composer-install (plugins enabled, INSTALL_DEV_DEPS=${INSTALL_DEV_DEPS}) ==="
+
 if [ "$INSTALL_DEV_DEPS" = "1" ]; then
   composer install --no-interaction --prefer-dist --optimize-autoloader
 else
@@ -14,7 +16,7 @@ else
 fi
 
 if [ ! -f vendor/autoload_runtime.php ]; then
-  echo "[composer-install] autoload_runtime.php missing; running dump-autoload to trigger Symfony Runtime plugin..."
+  echo "[composer-install] autoload_runtime.php missing; running dump-autoload..."
   if [ "$INSTALL_DEV_DEPS" = "1" ]; then
     composer dump-autoload --optimize
   else
@@ -22,10 +24,13 @@ if [ ! -f vendor/autoload_runtime.php ]; then
   fi
 fi
 
+if [ ! -f vendor/autoload_runtime.php ] && [ -f docker/autoload_runtime.php ]; then
+  echo "[composer-install] Using committed docker/autoload_runtime.php fallback"
+  cp docker/autoload_runtime.php vendor/autoload_runtime.php
+fi
+
 if [ ! -f vendor/autoload_runtime.php ]; then
   echo "ERROR: vendor/autoload_runtime.php missing after composer install."
-  echo "Composer plugins may be disabled. COMPOSER_ALLOW_SUPERUSER=${COMPOSER_ALLOW_SUPERUSER:-unset}"
-  ls -la vendor/autoload.php vendor/symfony/runtime 2>/dev/null || true
   exit 1
 fi
 
