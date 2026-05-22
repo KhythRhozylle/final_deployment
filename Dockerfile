@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+# v2 — composer install WITH scripts (not dump-autoload-only); see docker/composer-install.sh
 
 FROM php:8.3-fpm-bookworm
 
@@ -30,14 +31,10 @@ COPY . .
 
 RUN npm ci && npm run build
 
-# Composer: scripts MUST run so Symfony Flex creates vendor/autoload_runtime.php
-RUN if [ "$INSTALL_DEV_DEPS" = "1" ]; then \
-      composer install --no-interaction --prefer-dist --optimize-autoloader; \
-    else \
-      composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader; \
-    fi \
-    && test -f vendor/autoload_runtime.php \
-    || (echo "ERROR: vendor/autoload_runtime.php missing — check composer install scripts" && exit 1)
+COPY docker/composer-install.sh /usr/local/bin/composer-install.sh
+RUN sed -i 's/\r$//' /usr/local/bin/composer-install.sh \
+    && chmod +x /usr/local/bin/composer-install.sh \
+    && INSTALL_DEV_DEPS="$INSTALL_DEV_DEPS" /usr/local/bin/composer-install.sh
 
 COPY docker/nginx-main.conf /etc/nginx/nginx.conf
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
