@@ -19,26 +19,25 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 
 ARG INSTALL_DEV_DEPS=0
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Composer dependencies
-COPY composer.json composer.lock symfony.lock ./
-RUN if [ "$INSTALL_DEV_DEPS" = "1" ]; then \
-      composer install --no-interaction --prefer-dist --no-scripts; \
-    else \
-      composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader --no-scripts; \
-    fi
-
-# Front-end build (Encore needs vendor + assets; composer install above provides vendor)
+# Front-end build (needs lock files + assets; vendor comes after full COPY)
 COPY package.json package-lock.json webpack.config.js ./
 COPY assets ./assets
-RUN npm ci && npm run build
 
-# Application
+# Application code (vendor/ excluded via .dockerignore)
 COPY . .
 
-RUN composer dump-autoload --optimize --classmap-authoritative \
+RUN npm ci && npm run build
+
+# Composer: scripts MUST run so Symfony Flex creates vendor/autoload_runtime.php
+RUN if [ "$INSTALL_DEV_DEPS" = "1" ]; then \
+      composer install --no-interaction --prefer-dist --optimize-autoloader; \
+    else \
+      composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader; \
+    fi \
     && test -f vendor/autoload_runtime.php \
-    || (echo "ERROR: vendor/autoload_runtime.php missing after composer install" && exit 1)
+    || (echo "ERROR: vendor/autoload_runtime.php missing — check composer install scripts" && exit 1)
 
 COPY docker/nginx-main.conf /etc/nginx/nginx.conf
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
@@ -49,7 +48,6 @@ RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
 RUN mkdir -p var/cache var/log public/uploads/images config/jwt \
     && chown -R www-data:www-data var public/uploads config/jwt
 
-# Ship a committed .env template if .env is not in the build context
 RUN if [ ! -f .env ] && [ -f .env.example ]; then cp .env.example .env; fi
 
 EXPOSE 8000
