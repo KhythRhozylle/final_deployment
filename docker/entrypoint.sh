@@ -62,7 +62,7 @@ if [ -n "${DATABASE_URL:-}" ]; then
         && [ -n "${BOOTSTRAP_ADMIN_USERNAME:-}" ] \
         && [ -n "${BOOTSTRAP_ADMIN_NAME:-}" ] \
         && [ -n "${BOOTSTRAP_ADMIN_PASSWORD:-}" ]; then
-        user_count="$(run_console doctrine:query:sql 'SELECT COUNT(*) FROM user' --quiet 2>/dev/null | tr -dc '0-9' || echo 0)"
+        user_count="$(run_console doctrine:query:sql 'SELECT COUNT(*) FROM user' 2>/dev/null | tr -dc '0-9' || echo 0)"
         if [ "${user_count:-0}" = "0" ]; then
             echo "[entrypoint] Creating bootstrap admin (${BOOTSTRAP_ADMIN_EMAIL})..."
             run_console app:create-admin \
