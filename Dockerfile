@@ -54,15 +54,17 @@ RUN echo "=== Florynn Docker v6: composer-finish ===" \
 
 # --- 4) Web server + permissions ---
 COPY docker/nginx-main.conf /etc/nginx/nginx.conf
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx.conf.template /etc/nginx/templates/florynn.conf.template
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh /etc/nginx/templates/florynn.conf.template \
     && chmod 755 /usr/local/bin/entrypoint.sh \
-    && mkdir -p var/cache var/log public/uploads/images config/jwt \
+    && mkdir -p /etc/nginx/templates var/cache var/log public/uploads/images config/jwt \
     && chown -R www-data:www-data var public/uploads config/jwt
 
 RUN if [ ! -f .env ] && [ -f .env.example ]; then cp .env.example .env; fi
 
+# Railway injects PORT at runtime (often not 8000)
+ENV PORT=8000
 EXPOSE 8000
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
