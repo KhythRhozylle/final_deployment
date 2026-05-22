@@ -77,7 +77,11 @@ run_console() {
 
     if [ -n "${DATABASE_URL:-}" ]; then
         echo "[entrypoint] Running database migrations..."
-        run_console doctrine:migrations:migrate --no-interaction --allow-no-migration 2>/dev/null || true
+        if ! run_console doctrine:migrations:migrate --no-interaction --allow-no-migration; then
+            echo "[entrypoint] ERROR: migrations failed — check DATABASE_URL and run: php bin/console doctrine:migrations:migrate --no-interaction"
+        fi
+    else
+        echo "[entrypoint] DATABASE_URL not set — skipping migrations"
     fi
 
     if [ "${APP_ENV:-prod}" = "prod" ] && [ "${WARM_CACHE_ON_START:-0}" = "1" ]; then
