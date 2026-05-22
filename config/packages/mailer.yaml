@@ -1,0 +1,3 @@
+framework:
+    mailer:
+        dsn: 'smtp://%env(urlencode:BREVO_SMTP_USER)%:%env(urlencode:BREVO_SMTP_KEY)%@smtp-relay.brevo.com:587'

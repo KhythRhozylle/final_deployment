@@ -1,0 +1,3 @@
+docker/entrypoint.sh text eol=lf
+docker/nginx.conf text eol=lf
+docker/nginx-main.conf text eol=lf

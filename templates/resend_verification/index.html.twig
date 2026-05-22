@@ -1,0 +1,41 @@
+{% extends 'base_landing.html.twig' %}
+
+{% block title %}Resend verification — Florynn{% endblock %}
+
+{% block body %}
+<div style="max-width: 500px; margin: 60px auto; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+    <h1 style="text-align: center; color: #8B5E3C; margin-bottom: 12px; font-size: 1.75rem;">Resend verification email</h1>
+    <p style="text-align: center; color: #666; margin-bottom: 28px; font-size: 0.95rem;">
+        Enter the email you used when registering. We will send a new verification link if the account exists and is not verified yet.
+    </p>
+
+    {% for message in app.flashes('error') %}
+        <div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #dc3545;">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    <form method="post" action="{{ path('app_resend_verification') }}" style="display: flex; flex-direction: column; gap: 20px;">
+        <input type="hidden" name="_token" value="{{ csrf_token('resend_verification') }}">
+        <div>
+            <label for="email" style="display: block; margin-bottom: 8px; color: #555; font-weight: 500;">Email</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                value="{{ email }}"
+                required
+                placeholder="your@email.com"
+                style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; box-sizing: border-box;"
+            >
+        </div>
+        <button type="submit" style="padding: 14px; background: linear-gradient(135deg, #8B5E3C 0%, #A0724E 100%); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;">
+            Send verification link
+        </button>
+    </form>
+
+    <p style="text-align: center; margin-top: 24px;">
+        <a href="{{ path('app_login') }}" style="color: #8B5E3C;">Back to sign in</a>
+    </p>
+</div>
+{% endblock %}

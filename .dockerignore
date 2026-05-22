@@ -1,0 +1,13 @@
+.git
+.gitignore
+.dockerignore
+README.md
+var/
+vendor/
+node_modules/
+public/build/
+.env.local
+.env.*.local
+.phpunit.cache
+tests/
+docs/

@@ -1,0 +1,9 @@
+Welcome, {{ user.name|default(user.username) }}!
+
+Thank you for creating an account with Florynn. Please verify your email address ({{ user.email }}) by opening this link in your browser:
+
+{{ verificationUrl }}
+
+If you did not create an account, you can ignore this message.
+
+— The Florynn team

@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Review mobile order — Florynn{% endblock %}
+
+{% block body %}
+<style>
+    .review-wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+    .review-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .review-header h1 { font-size: 1.6rem; color: #3E2723; margin: 0; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(139,94,60,.1); border: 1px solid rgba(139,94,60,.12); }
+    .card h2 { font-size: 1rem; color: #8B5E3C; margin: 0 0 14px; text-transform: uppercase; letter-spacing: .5px; }
+    .stock-ok { color: #2E7D32; font-weight: 600; }
+    .stock-bad { color: #C62828; font-weight: 600; }
+    .alert-warn { background: #FFF3E0; border-left: 4px solid #FF9800; padding: 14px; border-radius: 8px; margin-bottom: 20px; color: #E65100; }
+    .alert-ok { background: #E8F5E9; border-left: 4px solid #4CAF50; padding: 14px; border-radius: 8px; margin-bottom: 20px; color: #2E7D32; }
+    table.review-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    table.review-table th { text-align: left; padding: 10px; background: #8B5E3C; color: #fff; }
+    table.review-table td { padding: 10px; border-bottom: 1px solid #eee; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+    .btn-approve { background: linear-gradient(135deg, #2E7D32, #43A047); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .btn-approve:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-reject { background: linear-gradient(135deg, #C62828, #E53935); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .btn-back { background: #fff; color: #8B5E3C; border: 2px solid #8B5E3C; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; }
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .detail-grid p { margin: 0 0 8px; font-size: 0.9rem; color: #555; }
+    .detail-grid strong { color: #3E2723; }
+</style>
+
+<div class="review-wrap">
+    <div class="review-header">
+        <a href="{{ path('app_order_index') }}" class="btn-back"><i class="fas fa-arrow-left"></i> Orders</a>
+        <h1><i class="fas fa-mobile-alt"></i> Mobile order review</h1>
+        <span style="font-family: monospace; font-size: 0.85rem; color: #666;">{{ summary.orderGroupId|slice(0, 8) }}…</span>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert-ok">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert-warn">{{ message }}</div>
+    {% endfor %}
+
+    {% if summary.canApprove %}
+        <div class="alert-ok">
+            <strong>Ready to ship:</strong> All items have enough stock. You can confirm and approve this order.
+        </div>
+    {% else %}
+        <div class="alert-warn">
+            <strong>Cannot approve yet:</strong>
+            {% if summary.issues|length > 0 %}
+                {{ summary.issues|join(' ') }}
+            {% else %}
+                Order is not in pending status.
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if summary.customer %}
+    <div class="card">
+        <h2>Customer & delivery</h2>
+        <div class="detail-grid">
+            <p><strong>Name:</strong> {{ summary.customer.name }}</p>
+            <p><strong>Email:</strong> {{ summary.customer.email }}</p>
+            <p><strong>Phone:</strong> {{ summary.customer.phone }}</p>
+            <p><strong>Address:</strong> {{ summary.customer.address }}</p>
+            <p><strong>Delivery:</strong> {{ summary.customer.deliveryLocation }}</p>
+            <p><strong>City/Province:</strong> {{ summary.customer.cityProvince }}</p>
+        </div>
+        {% if summary.notes %}
+            <p style="margin-top:12px;"><strong>Notes:</strong> {{ summary.notes }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <h2>Order summary — ₱{{ summary.total|number_format(2) }}</h2>
+        <table class="review-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Line total</th>
+                    <th>Stock available</th>
+                    <th>Can ship?</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for line in summary.lines %}
+                <tr>
+                    <td>{{ line.productName }}</td>
+                    <td>{{ line.quantity|round(0) }}</td>
+                    <td>₱{{ line.price|number_format(2) }}</td>
+                    <td>₱{{ line.lineTotal|number_format(2) }}</td>
+                    <td>{{ line.availableStock }}</td>
+                    <td>
+                        {% if line.sufficient %}
+                            <span class="stock-ok"><i class="fas fa-check-circle"></i> Yes</span>
+                        {% else %}
+                            <span class="stock-bad"><i class="fas fa-times-circle"></i> No</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>Admin decision</h2>
+        <p style="color:#666; margin-bottom:16px;">
+            <strong>Confirm & approve</strong> deducts stock and sets status to <em>Confirmed</em> (customer app updates).
+            <strong>Reject</strong> cancels the order without shipping.
+        </p>
+        <div class="actions">
+            <form method="post" action="{{ path('app_order_group_approve', { orderGroupId: summary.orderGroupId }) }}" style="display:inline;">
+                <input type="hidden" name="_token" value="{{ csrf_token('approve_order_group') }}">
+                <button type="submit" class="btn-approve" {% if not summary.canApprove %}disabled{% endif %}
+                    onclick="return confirm('Approve this order and deduct stock?');">
+                    <i class="fas fa-check"></i> Confirm & approve order
+                </button>
+            </form>
+            <form method="post" action="{{ path('app_order_group_reject', { orderGroupId: summary.orderGroupId }) }}" style="display:inline;">
+                <input type="hidden" name="_token" value="{{ csrf_token('reject_order_group') }}">
+                <button type="submit" class="btn-reject"
+                    onclick="return confirm('Reject this order? The customer will be notified via app status.');">
+                    <i class="fas fa-ban"></i> Reject order
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
