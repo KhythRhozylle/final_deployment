@@ -3,7 +3,8 @@
 .dockerignore
 README.md
 var/
-vendor/
+vendor/*
+!vendor/autoload_runtime.php
 node_modules/
 public/build/
 .env.local
