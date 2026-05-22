@@ -1,3 +1,4 @@
+# Shell scripts must use LF and stay executable-friendly on Linux (Railway Docker)
+docker/*.sh text eol=lf
 docker/entrypoint.sh text eol=lf
-docker/nginx.conf text eol=lf
-docker/nginx-main.conf text eol=lf
+bin/console text eol=lf

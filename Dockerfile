@@ -29,7 +29,7 @@ COPY docker/composer-deps.sh docker/composer-finish.sh docker/autoload_runtime.p
 RUN sed -i 's/\r$//' docker/composer-deps.sh docker/composer-finish.sh docker/autoload_runtime.php \
     && chmod +x docker/composer-deps.sh docker/composer-finish.sh \
     && echo "=== Florynn Docker v5: composer-deps ===" \
-    && INSTALL_DEV_DEPS="$INSTALL_DEV_DEPS" ./docker/composer-deps.sh
+    && INSTALL_DEV_DEPS="$INSTALL_DEV_DEPS" sh docker/composer-deps.sh
 
 # --- 2) Front-end (file:vendor/symfony/ux-turbo needs vendor/ from step 1) ---
 COPY package.json package-lock.json webpack.config.js ./
@@ -41,10 +41,11 @@ RUN echo "=== Florynn Docker v5: npm ===" \
 
 # --- 3) Application (bin/console, config/, src/, public/, …) ---
 COPY . .
+# COPY . . overwrites docker/*.sh from the host (often non-executable on Windows) — fix before running
 RUN echo "=== Florynn Docker v5: composer-finish ===" \
-    && sed -i 's/\r$//' bin/console 2>/dev/null || true \
-    && chmod +x bin/console \
-    && INSTALL_DEV_DEPS="$INSTALL_DEV_DEPS" ./docker/composer-finish.sh
+    && sed -i 's/\r$//' docker/composer-deps.sh docker/composer-finish.sh bin/console \
+    && chmod +x docker/composer-deps.sh docker/composer-finish.sh bin/console \
+    && INSTALL_DEV_DEPS="$INSTALL_DEV_DEPS" sh docker/composer-finish.sh
 
 # --- 4) Web server + permissions ---
 COPY docker/nginx-main.conf /etc/nginx/nginx.conf
