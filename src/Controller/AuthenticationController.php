@@ -14,15 +14,19 @@ class AuthenticationController extends AbstractController
     #[Route('/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        if ($this->getUser()) {
-            if ($this->isGranted('ROLE_ADMIN')) {
-                return $this->redirectToRoute('app_admin_dashboard');
-            }
-            if ($this->isGranted('ROLE_STAFF')) {
-                return $this->redirectToRoute('app_staff_home');
-            }
+        try {
+            if ($this->getUser()) {
+                if ($this->isGranted('ROLE_ADMIN')) {
+                    return $this->redirectToRoute('app_admin_dashboard');
+                }
+                if ($this->isGranted('ROLE_STAFF')) {
+                    return $this->redirectToRoute('app_staff_home');
+                }
 
-            return $this->redirectToRoute('app_home');
+                return $this->redirectToRoute('app_home');
+            }
+        } catch (\Throwable) {
+            // DB missing / not migrated yet — still show login form
         }
 
         // get the login error if there is one
