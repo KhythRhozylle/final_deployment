@@ -57,6 +57,24 @@ if [ -n "${DATABASE_URL:-}" ]; then
         exit 1
     fi
     echo "[entrypoint] Migrations complete"
+
+    if [ -n "${BOOTSTRAP_ADMIN_EMAIL:-}" ] \
+        && [ -n "${BOOTSTRAP_ADMIN_USERNAME:-}" ] \
+        && [ -n "${BOOTSTRAP_ADMIN_NAME:-}" ] \
+        && [ -n "${BOOTSTRAP_ADMIN_PASSWORD:-}" ]; then
+        user_count="$(run_console doctrine:query:sql 'SELECT COUNT(*) FROM user' --quiet 2>/dev/null | tr -dc '0-9' || echo 0)"
+        if [ "${user_count:-0}" = "0" ]; then
+            echo "[entrypoint] Creating bootstrap admin (${BOOTSTRAP_ADMIN_EMAIL})..."
+            run_console app:create-admin \
+                --email="${BOOTSTRAP_ADMIN_EMAIL}" \
+                --username="${BOOTSTRAP_ADMIN_USERNAME}" \
+                --name="${BOOTSTRAP_ADMIN_NAME}" \
+                --password="${BOOTSTRAP_ADMIN_PASSWORD}" \
+                || echo "[entrypoint] WARN: bootstrap admin failed (user may already exist)"
+        else
+            echo "[entrypoint] Skip bootstrap admin (${user_count} user(s) already in database)"
+        fi
+    fi
 else
     echo "[entrypoint] WARN: DATABASE_URL not set — login will fail until MySQL is linked"
 fi
