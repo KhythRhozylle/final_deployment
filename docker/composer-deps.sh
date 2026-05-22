@@ -7,6 +7,7 @@ export COMPOSER_NO_INTERACTION=1
 unset COMPOSER_DISABLE_PLUGINS 2>/dev/null || true
 
 INSTALL_DEV_DEPS="${INSTALL_DEV_DEPS:-0}"
+RUNTIME_FALLBACK="${RUNTIME_FALLBACK:-/usr/local/share/florynn/autoload_runtime.php}"
 
 echo "=== composer-deps: vendor install (--no-scripts) ==="
 
@@ -25,8 +26,10 @@ if [ ! -f vendor/autoload_runtime.php ]; then
   fi
 fi
 
-if [ ! -f vendor/autoload_runtime.php ] && [ -f docker/autoload_runtime.php ]; then
-  echo "[composer-deps] Fallback: docker/autoload_runtime.php"
+if [ ! -f vendor/autoload_runtime.php ] && [ -f "$RUNTIME_FALLBACK" ]; then
+  echo "[composer-deps] Fallback: $RUNTIME_FALLBACK"
+  cp "$RUNTIME_FALLBACK" vendor/autoload_runtime.php
+elif [ ! -f vendor/autoload_runtime.php ] && [ -f docker/autoload_runtime.php ]; then
   cp docker/autoload_runtime.php vendor/autoload_runtime.php
 fi
 
