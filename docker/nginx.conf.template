@@ -23,6 +23,9 @@ server {
         fastcgi_param HTTP_HOST $http_host;
         fastcgi_param SERVER_PORT $server_port;
         fastcgi_param HTTPS $http_x_forwarded_proto;
+        fastcgi_connect_timeout 10s;
+        fastcgi_send_timeout 120s;
+        fastcgi_read_timeout 120s;
         internal;
     }
 

@@ -1,3 +1,4 @@
 framework:
     mailer:
-        dsn: 'smtp://%env(urlencode:BREVO_SMTP_USER)%:%env(urlencode:BREVO_SMTP_KEY)%@smtp-relay.brevo.com:587'
+        # Override with MAILER_DSN. Use null://null on Railway until outbound SMTP is available.
+        dsn: '%env(default:default_mailer_dsn:MAILER_DSN)%'

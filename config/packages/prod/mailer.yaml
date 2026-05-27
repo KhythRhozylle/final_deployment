@@ -1,0 +1,4 @@
+# Production: never block HTTP on SMTP (Railway often blocks port 587).
+framework:
+    mailer:
+        dsn: '%env(default:default_mailer_dsn:MAILER_DSN)%'

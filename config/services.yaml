@@ -5,6 +5,10 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     images_directory: '%kernel.project_dir%/public/uploads/images'
+    # Symfony env(default::VAR) passes null when unset — use explicit empty fallback for typed string args
+    app.env_empty: ''
+    # Safe default when MAILER_DSN is unset (avoids 60s SMTP connect timeouts on Railway)
+    default_mailer_dsn: 'null://null'
 
 services:
     # default configuration for services in *this* file
@@ -27,8 +31,17 @@ services:
 
     App\Service\AppUrlService:
         arguments:
-            $appUrl: '%env(default::APP_URL)%'
-            $railwayPublicDomain: '%env(default::RAILWAY_PUBLIC_DOMAIN)%'
+            $appUrl: '%env(default:app.env_empty:APP_URL)%'
+            $railwayPublicDomain: '%env(default:app.env_empty:RAILWAY_PUBLIC_DOMAIN)%'
+
+    App\Service\ShopInfoService:
+        arguments:
+            $shopName: '%florynn.shop.name%'
+            $shopHours: '%florynn.shop.hours%'
+            $shopPhones: '%florynn.shop.phones%'
+            $shopEmail: '%florynn.shop.email%'
+            $shopAddress: '%florynn.shop.address%'
+            $shopServices: '%florynn.shop.services%'
 
     App\EventSubscriber\RouterContextSubscriber:
         arguments:
@@ -36,12 +49,12 @@ services:
 
     App\Service\EmailVerificationService:
         arguments:
-            $fromEmail: '%env(default::MAILER_FROM_EMAIL)%'
-            $fromName: '%env(default::MAILER_FROM_NAME)%'
+            $fromEmail: '%env(default:app.env_empty:MAILER_FROM_EMAIL)%'
+            $fromName: '%env(default:app.env_empty:MAILER_FROM_NAME)%'
 
     App\Service\GoogleIdTokenVerifier:
         arguments:
-            $googleClientId: '%env(default::GOOGLE_CLIENT_ID)%'
+            $googleClientId: '%env(default:app.env_empty:GOOGLE_CLIENT_ID)%'
 
     # Custom Guzzle HTTP client with SSL certificate for OAuth2
     oauth2_http_client:
