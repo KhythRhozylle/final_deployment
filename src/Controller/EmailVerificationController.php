@@ -15,6 +15,12 @@ class EmailVerificationController extends AbstractController
         Request $request,
         EmailVerificationService $emailVerificationService
     ): Response {
+        if ($this->getParameter('florynn.demo_mode')) {
+            $this->addFlash('info', 'Email verification is not required in demo mode. You can sign in right after registering.');
+
+            return $this->redirectToRoute('app_login');
+        }
+
         $token = $request->query->get('token');
 
         if (!$token) {

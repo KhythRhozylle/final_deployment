@@ -18,6 +18,12 @@ class GoogleController extends AbstractController
     #[Route('/connect/google', name: 'connect_google_start')]
     public function connect(): RedirectResponse
     {
+        if ($this->getParameter('florynn.demo_mode')) {
+            $this->addFlash('info', 'Google sign-in is disabled in demo mode. Use email and password instead.');
+
+            return $this->redirectToRoute('app_login');
+        }
+
         return $this->clientRegistry->getClient('google')->redirect();
     }
 

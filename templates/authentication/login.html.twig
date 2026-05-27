@@ -218,6 +218,18 @@
                 {{ message }}
             </div>
         {% endfor %}
+        {% for message in app.flashes('info') %}
+            <div class="error-alert" style="background: rgba(209, 236, 241, 0.95); color: #0c5460; border-color: rgba(23, 162, 184, 0.3);">
+                <i class="fas fa-info-circle"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+        {% if demo_mode %}
+            <div class="error-alert" style="background: rgba(255, 243, 205, 0.95); color: #856404; border-color: rgba(255, 193, 7, 0.4);">
+                <i class="fas fa-flask"></i>
+                <strong>Demo mode</strong> — use email + password only. No Google or verification emails.
+            </div>
+        {% endif %}
         {% if error %}
             <div class="error-alert">
                 <i class="fas fa-exclamation-triangle"></i>
@@ -268,6 +280,7 @@
                 Sign In
             </button>
 
+            {% if not demo_mode %}
             <a href="{{ path('connect_google_start') }}" class="btn-google">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -277,16 +290,21 @@
               </svg>
               Sign in with Google
             </a>
+            {% endif %}
 
         </form>
         
         <div class="register-link">
+            {% if not demo_mode %}
             <p style="margin: 0 0 8px;">Didn’t get the verification email?</p>
             <a href="{{ path('app_resend_verification') }}">
                 <i class="fas fa-envelope"></i>
                 Resend verification link
             </a>
             <p style="margin: 16px 0 8px;">Don't have an account?</p>
+            {% else %}
+            <p style="margin: 0 0 8px;">Don't have an account?</p>
+            {% endif %}
             <a href="{{ path('app_register') }}">
                 <i class="fas fa-user-plus"></i>
                 Create Account

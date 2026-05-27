@@ -24,6 +24,13 @@ class ApiMobileGoogleAuthController extends AbstractController
     #[Route('/api/mobile/auth/google', name: 'api_mobile_auth_google', methods: ['POST'])]
     public function google(Request $request): JsonResponse
     {
+        if ($this->getParameter('florynn.demo_mode')) {
+            return $this->json([
+                'error' => 'Demo mode',
+                'message' => 'Google sign-in is disabled. Use /api/register and /api/login instead.',
+            ], Response::HTTP_NOT_IMPLEMENTED);
+        }
+
         $data = json_decode($request->getContent(), true);
         $idToken = \is_array($data) ? ($data['idToken'] ?? $data['id_token'] ?? null) : null;
 

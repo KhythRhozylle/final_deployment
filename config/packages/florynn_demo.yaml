@@ -1,0 +1,3 @@
+parameters:
+    env(FLORYNN_DEMO_MODE): 'true'
+    florynn.demo_mode: '%env(bool:FLORYNN_DEMO_MODE)%'

@@ -24,6 +24,12 @@ class ResendVerificationController extends AbstractController
         UrlGeneratorInterface $urlGenerator,
         LoggerInterface $logger,
     ): Response {
+        if ($this->getParameter('florynn.demo_mode')) {
+            $this->addFlash('info', 'Email verification is disabled in demo mode. Register or sign in with email and password.');
+
+            return $this->redirectToRoute('app_login');
+        }
+
         $email = $request->request->getString('email');
 
         if ($request->isMethod('POST')) {

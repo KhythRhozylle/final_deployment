@@ -1,5 +1,7 @@
 twig:
     file_name_pattern: '*.twig'
+    globals:
+        demo_mode: '%florynn.demo_mode%'
 
 when@test:
     twig:

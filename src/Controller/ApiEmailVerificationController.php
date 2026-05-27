@@ -25,6 +25,13 @@ class ApiEmailVerificationController extends AbstractController
     #[Route('/api/verify-email', name: 'api_verify_email', methods: ['POST'])]
     public function verifyEmail(Request $request): JsonResponse
     {
+        if ($this->getParameter('florynn.demo_mode')) {
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Demo mode: email verification is not required.',
+            ]);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['token']) || empty($data['token'])) {
@@ -56,6 +63,13 @@ class ApiEmailVerificationController extends AbstractController
     #[Route('/api/resend-verification', name: 'api_resend_verification', methods: ['POST'])]
     public function resendVerification(Request $request): JsonResponse
     {
+        if ($this->getParameter('florynn.demo_mode')) {
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Demo mode: no verification email is sent. Sign in after register.',
+            ]);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['email']) || empty($data['email'])) {
