@@ -31,8 +31,13 @@ final class CustomerPortalController extends AbstractController
     public function home(
         ProductRepository $productRepository,
         CategoryRepository $categoryRepository,
+        CustomerRepository $customerRepository,
         Request $request,
     ): Response {
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        $customer = $customerRepository->findOneBy(['email' => $user?->getEmail()]);
+
         $search = trim((string) $request->query->get('search', ''));
         $categoryId = $request->query->get('category', '');
         $categoryId = ($categoryId !== '' && is_numeric($categoryId)) ? (int) $categoryId : null;
@@ -45,6 +50,7 @@ final class CustomerPortalController extends AbstractController
         return $this->render('customer_portal/home.html.twig', [
             'products'    => $products,
             'categories'  => $categoryRepository->findAll(),
+            'customer'    => $customer,
             'search'      => $search,
             'category_id' => $categoryId,
         ]);
@@ -87,6 +93,53 @@ final class CustomerPortalController extends AbstractController
             }
             $customer->setUsername($username);
             $em->persist($customer);
+        }
+
+        // Update delivery/customer fields from the submitted form (web portal).
+        // Mobile app orders already enforce these fields in MobileOrderService.
+        $customerInput = \is_array($data['customer'] ?? null) ? $data['customer'] : [];
+        $fullName = trim((string) ($customerInput['fullName'] ?? ''));
+        $phone = trim((string) ($customerInput['phone'] ?? ''));
+        $address = trim((string) ($customerInput['address'] ?? ''));
+        $deliveryLocation = trim((string) ($customerInput['deliveryLocation'] ?? ''));
+        $cityProvince = trim((string) ($customerInput['cityProvince'] ?? ''));
+
+        if ($fullName !== '') {
+            $customer->setName($fullName);
+            $customer->setCustomerName($fullName);
+        }
+        if ($phone !== '') {
+            $customer->setPhone($phone);
+        }
+        if ($address !== '') {
+            $customer->setAddress($address);
+        }
+        if ($deliveryLocation !== '') {
+            $customer->setDeliveryLocation($deliveryLocation);
+        }
+        if ($cityProvince !== '') {
+            $customer->setCityProvince($cityProvince);
+        }
+
+        // Ensure required delivery fields exist either from the form or the DB.
+        $missing = [];
+        if (trim((string) $customer->getPhone()) === '') {
+            $missing[] = 'phone';
+        }
+        if (trim((string) $customer->getAddress()) === '') {
+            $missing[] = 'address';
+        }
+        if (trim((string) $customer->getDeliveryLocation()) === '') {
+            $missing[] = 'deliveryLocation';
+        }
+        if (trim((string) $customer->getCityProvince()) === '') {
+            $missing[] = 'cityProvince';
+        }
+        if ($missing !== []) {
+            return $this->json([
+                'error' => 'Delivery address information is required.',
+                'missing' => $missing,
+            ], Response::HTTP_BAD_REQUEST);
         }
 
         $orderGroupId = Uuid::v4()->toRfc4122();
