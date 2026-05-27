@@ -2,9 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\ContactInquiry;
 use App\Entity\Product;
-use App\Repository\ProductRepository;
 use App\Repository\CategoryRepository;
+use App\Repository\ProductRepository;
+use App\Service\ShopInfoService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,8 +21,18 @@ class ApiMobileController extends AbstractController
         private ProductRepository $productRepository,
         private CategoryRepository $categoryRepository,
         private EntityManagerInterface $entityManager,
-        private ValidatorInterface $validator
+        private ValidatorInterface $validator,
+        private ShopInfoService $shopInfoService,
     ) {}
+
+    private function noCacheJson(array $payload, int $status = Response::HTTP_OK): JsonResponse
+    {
+        $response = new JsonResponse($payload, $status);
+        $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        $response->headers->set('Pragma', 'no-cache');
+
+        return $response;
+    }
 
     private function serializeProduct(Product $product): array
     {
@@ -39,21 +51,34 @@ class ApiMobileController extends AbstractController
         ];
     }
 
+    #[Route('/api/mobile/shop', name: 'api_mobile_shop', methods: ['GET'])]
+    public function shop(): JsonResponse
+    {
+        $products = $this->productRepository->findBy([], ['id' => 'DESC']);
+        $categories = $this->categoryRepository->findAll();
+
+        return $this->noCacheJson([
+            'status' => 'success',
+            'data' => $this->shopInfoService->toArray(count($products), count($categories)),
+            'syncedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+        ]);
+    }
+
     #[Route('/api/mobile/products', name: 'api_mobile_products', methods: ['GET'])]
     public function getProducts(Request $request): JsonResponse
     {
         $categoryId = $request->query->get('categoryId');
         $products = $categoryId
-            ? $this->productRepository->findBy(['category' => (int) $categoryId])
-            : $this->productRepository->findAll();
+            ? $this->productRepository->findBy(['category' => (int) $categoryId], ['id' => 'DESC'])
+            : $this->productRepository->findBy([], ['id' => 'DESC']);
 
         $data = array_map(fn (Product $p) => $this->serializeProduct($p), $products);
 
-        return new JsonResponse([
+        return $this->noCacheJson([
             'status' => 'success',
             'data' => $data,
             'count' => count($data),
-        ], Response::HTTP_OK);
+        ]);
     }
 
     #[Route('/api/mobile/products/{id}', name: 'api_mobile_product_detail', methods: ['GET'], requirements: ['id' => '\d+'])]
@@ -61,16 +86,16 @@ class ApiMobileController extends AbstractController
     {
         $product = $this->productRepository->find($id);
         if (!$product) {
-            return new JsonResponse([
+            return $this->noCacheJson([
                 'error' => 'Not found',
                 'message' => 'Product not found',
             ], Response::HTTP_NOT_FOUND);
         }
 
-        return new JsonResponse([
+        return $this->noCacheJson([
             'status' => 'success',
             'data' => $this->serializeProduct($product),
-        ], Response::HTTP_OK);
+        ]);
     }
 
     #[Route('/api/mobile/categories', name: 'api_mobile_categories', methods: ['GET'])]
@@ -86,11 +111,31 @@ class ApiMobileController extends AbstractController
             ];
         }, $categories);
 
-        return new JsonResponse([
+        return $this->noCacheJson([
             'status' => 'success',
             'data' => $data,
             'count' => count($data),
-        ], Response::HTTP_OK);
+        ]);
+    }
+
+    #[Route('/api/mobile/status', name: 'api_mobile_status', methods: ['GET'])]
+    public function status(): JsonResponse
+    {
+        $conn = $this->entityManager->getConnection();
+        $params = $conn->getParams();
+        $products = $this->productRepository->findBy([], ['id' => 'DESC']);
+
+        return $this->noCacheJson([
+            'status' => 'success',
+            'database' => [
+                'host' => $params['host'] ?? null,
+                'port' => $params['port'] ?? null,
+                'name' => $params['dbname'] ?? null,
+            ],
+            'productCount' => count($products),
+            'productNames' => array_map(fn (Product $p) => $p->getName(), $products),
+            'shop' => $this->shopInfoService->toArray(count($products)),
+        ]);
     }
 
     #[Route('/api/mobile/contact', name: 'api_mobile_contact', methods: ['POST'])]
@@ -99,22 +144,36 @@ class ApiMobileController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['name']) || !isset($data['email']) || !isset($data['message'])) {
-            return new JsonResponse([
+            return $this->noCacheJson([
                 'error' => 'Validation failed',
                 'message' => 'Name, email, and message are required',
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        if (empty(trim($data['name'])) || empty(trim($data['email'])) || empty(trim($data['message']))) {
-            return new JsonResponse([
+        $name = trim((string) $data['name']);
+        $email = trim((string) $data['email']);
+        $message = trim((string) $data['message']);
+
+        if ($name === '' || $email === '' || $message === '') {
+            return $this->noCacheJson([
                 'error' => 'Validation failed',
                 'message' => 'All fields must be filled',
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        return new JsonResponse([
+        $inquiry = (new ContactInquiry())
+            ->setName($name)
+            ->setEmail($email)
+            ->setMessage($message)
+            ->setSource('mobile');
+
+        $this->entityManager->persist($inquiry);
+        $this->entityManager->flush();
+
+        return $this->noCacheJson([
             'success' => true,
-            'message' => 'Contact form submitted successfully',
-        ], Response::HTTP_OK);
+            'message' => 'Contact form submitted successfully. Our team will review it in the admin dashboard.',
+            'id' => $inquiry->getId(),
+        ]);
     }
 }

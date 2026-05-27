@@ -1,0 +1,14 @@
+# Shared shop info for web templates and /api/mobile/shop (admin + mobile stay in sync).
+parameters:
+    florynn.shop.name: 'Florynn Handmade Bouquets'
+    florynn.shop.hours: 'Monday - Friday: 9:00 AM - 6:00 PM'
+    florynn.shop.phones:
+        - '+09068023349'
+        - '09557351624'
+    florynn.shop.email: 'florynn@flowershop.com'
+    florynn.shop.address: 'Agan-an, Sibulan, Negros Oriental'
+    florynn.shop.services:
+        - 'Custom wedding & event florals'
+        - 'Same-day pickup arrangements'
+        - 'Corporate gifting & subscriptions'
+        - 'Hand-tied bouquets & gift boxes'
