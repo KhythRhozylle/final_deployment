@@ -5,12 +5,6 @@
 {% block body %}
 <div style="max-width: 500px; margin: 60px auto; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(195, 90, 122, 0.15);">
     <h1 style="text-align: center; color: #C35A7A; margin-bottom: 30px; font-size: 2rem;">📝 Create Account</h1>
-
-    {% if demo_mode %}
-        <div style="background: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107; font-size: 0.95rem;">
-            <strong>Demo mode</strong> — no verification email. After you register you go straight to the shop.
-        </div>
-    {% endif %}
     
     {% for message in app.flashes('success') %}
         <div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #28a745;">

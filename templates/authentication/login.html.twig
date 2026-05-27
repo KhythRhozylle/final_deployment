@@ -224,12 +224,6 @@
                 {{ message }}
             </div>
         {% endfor %}
-        {% if demo_mode %}
-            <div class="error-alert" style="background: rgba(255, 243, 205, 0.95); color: #856404; border-color: rgba(255, 193, 7, 0.4);">
-                <i class="fas fa-flask"></i>
-                <strong>Demo mode</strong> — use email + password only. No Google or verification emails.
-            </div>
-        {% endif %}
         {% if error %}
             <div class="error-alert">
                 <i class="fas fa-exclamation-triangle"></i>
