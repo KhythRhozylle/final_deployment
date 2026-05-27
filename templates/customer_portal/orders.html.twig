@@ -1,0 +1,87 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My Orders - Florynn{% endblock %}
+
+{% block body %}
+<style>
+    .orders-wrapper { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+    .orders-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 10px; }
+    .orders-header h1 { font-size: 1.9rem; font-weight: 700; color: #C35A7A; margin: 0; }
+    .btn-shop { padding: 9px 20px; background: #C35A7A; color: #fff; border: none; border-radius: 10px; font-weight: 600; text-decoration: none; font-size: 0.95rem; }
+    .btn-shop:hover { background: #a8435f; }
+
+    .order-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.07); margin-bottom: 20px; overflow: hidden; }
+    .order-head { padding: 16px 20px; background: #fdf3f6; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .order-id { font-weight: 700; color: #C35A7A; font-size: 0.9rem; }
+    .order-date { color: #888; font-size: 0.85rem; }
+    .order-status { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; text-transform: capitalize; }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-confirmed { background: #cce5ff; color: #004085; }
+    .status-preparing { background: #d1ecf1; color: #0c5460; }
+    .status-out_for_delivery { background: #d4edda; color: #155724; }
+    .status-delivered { background: #d4edda; color: #155724; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    .order-body { padding: 16px 20px; }
+    .order-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 0.95rem; }
+    .order-item:last-child { border: none; }
+    .item-name { color: #3E2723; font-weight: 500; }
+    .item-price { color: #C35A7A; font-weight: 600; }
+    .order-total { text-align: right; font-weight: 700; font-size: 1.05rem; color: #3E2723; margin-top: 10px; padding-top: 10px; border-top: 2px solid #f0e0e8; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+</style>
+
+<div class="orders-wrapper">
+    <div class="orders-header">
+        <h1>📦 My Orders</h1>
+        <a href="{{ path('app_customer_portal') }}" class="btn-shop">🌸 Continue Shopping</a>
+    </div>
+
+    {% if orders is empty %}
+        <div class="empty-state">
+            <div class="icon">🛒</div>
+            <p>You haven't placed any orders yet.</p>
+            <a href="{{ path('app_customer_portal') }}" class="btn-shop">Browse Products</a>
+        </div>
+    {% else %}
+        {% set grouped = {} %}
+        {% for order in orders %}
+            {% set gid = order.orderGroupId ?? ('legacy-' ~ order.id) %}
+            {% if grouped[gid] is not defined %}
+                {% set grouped = grouped|merge({(gid): []}) %}
+            {% endif %}
+            {% set grouped = grouped|merge({(gid): grouped[gid]|merge([order])}) %}
+        {% endfor %}
+
+        {% for gid, groupOrders in grouped %}
+            {% set first = groupOrders|first %}
+            {% set total = 0 %}
+            {% for o in groupOrders %}
+                {% set total = total + (o.price * o.quantity) %}
+            {% endfor %}
+
+            <div class="order-card">
+                <div class="order-head">
+                    <div>
+                        <div class="order-id">Order #{{ gid|slice(0, 8) }}…</div>
+                        <div class="order-date">{{ first.orderDate ? first.orderDate|date('M d, Y g:i A') : '' }}</div>
+                    </div>
+                    <span class="order-status status-{{ first.status|replace({' ': '_'}) }}">
+                        {{ first.status|replace({'_': ' '})|capitalize }}
+                    </span>
+                </div>
+                <div class="order-body">
+                    {% for o in groupOrders %}
+                        <div class="order-item">
+                            <span class="item-name">{{ o.productName }} × {{ o.quantity }}</span>
+                            <span class="item-price">₱{{ (o.price * o.quantity)|number_format(2) }}</span>
+                        </div>
+                    {% endfor %}
+                    <div class="order-total">Total: ₱{{ total|number_format(2) }}</div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

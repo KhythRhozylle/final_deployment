@@ -7,6 +7,7 @@ use App\Form\RegistrationFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\EmailVerificationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -18,15 +19,16 @@ use Psr\Log\LoggerInterface;
 class RegistrationController extends AbstractController
 {
     #[Route('/register', name: 'app_register')]
-   public function register(
+    public function register(
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,
         EntityManagerInterface $entityManager,
         EmailVerificationService $emailVerificationService,
         LoggerInterface $logger,
+        Security $security,
     ): Response {
 
-    if ($this->getUser()) {
+        if ($this->getUser()) {
             if ($this->isGranted('ROLE_ADMIN')) {
                 return $this->redirectToRoute('app_admin_dashboard');
             }
@@ -34,7 +36,7 @@ class RegistrationController extends AbstractController
                 return $this->redirectToRoute('app_staff_home');
             }
 
-            return $this->redirectToRoute('app_home');
+            return $this->redirectToRoute('app_customer_portal');
         }
 
         $user = new User();
@@ -45,46 +47,51 @@ class RegistrationController extends AbstractController
             /** @var string $plainPassword */
             $plainPassword = $form->get('plainPassword')->getData();
 
-            // encode the plain password
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
 
-
-            // Generate verification token
-            $verificationToken = $emailVerificationService->generateVerificationToken();
-            $user->setVerificationToken($verificationToken);
-            $user->setIsVerified(false);
+            // Mark verified immediately — email is best-effort only (SMTP may be unavailable on Railway).
+            $user->setIsVerified(true);
+            $user->setVerificationToken(null);
+            $user->setRoles([]); // ROLE_USER is added automatically by getRoles()
 
             $entityManager->persist($user);
             $entityManager->flush();
 
-            // do anything else you need here, like send an email
-            // Generate verification URL
-            $verificationUrl = $this->generateUrl(
-                'app_verify_email',
-                ['token' => $verificationToken],
-                UrlGeneratorInterface::ABSOLUTE_URL
-            );
-
+            // Try to send verification email but never block registration on SMTP failure.
             try {
+                $verificationToken = $emailVerificationService->generateVerificationToken();
+                $user->setIsVerified(false);
+                $user->setVerificationToken($verificationToken);
+                $entityManager->flush();
+
+                $verificationUrl = $this->generateUrl(
+                    'app_verify_email',
+                    ['token' => $verificationToken],
+                    UrlGeneratorInterface::ABSOLUTE_URL
+                );
+
                 $emailVerificationService->sendVerificationEmail($user, $verificationUrl);
+
+                $this->addFlash('success', 'Registration successful! Please check your email to verify your account before logging in.');
+
+                return $this->redirectToRoute('app_login');
             } catch (TransportExceptionInterface $e) {
-                $logger->error('Registration verification email failed.', [
+                // SMTP unavailable — revert to verified so the user can log in immediately.
+                $logger->error('Registration verification email failed — user kept as verified.', [
                     'exception' => $e,
                     'recipient' => $user->getEmail(),
                 ]);
-                $entityManager->remove($user);
+                $user->setIsVerified(true);
+                $user->setVerificationToken(null);
                 $entityManager->flush();
-                $this->addFlash(
-                    'error',
-                    'We could not send an email to that address. Check it is correct and try again. If you use Gmail, also check spam. The site owner may need to verify the sender in Brevo.'
-                );
-
-                return $this->redirectToRoute('app_register');
             }
 
-            $this->addFlash('success', 'Registration successful! Please check your email (including spam) to verify your account.');
+            // Auto-login the user and send to the customer portal.
+            $response = $security->login($user, 'form_login', 'main');
 
-            return $this->redirectToRoute('app_login');
+            $this->addFlash('success', 'Registration successful! Welcome to Florynn.');
+
+            return $response ?? $this->redirectToRoute('app_customer_portal');
         }
 
         return $this->render('registration/register.html.twig', [
@@ -92,4 +99,3 @@ class RegistrationController extends AbstractController
         ]);
     }
 }
-

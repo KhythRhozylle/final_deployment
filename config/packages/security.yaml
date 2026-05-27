@@ -76,7 +76,6 @@ security:
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/verify-email, roles: PUBLIC_ACCESS }
         - { path: ^/resend-verification, roles: PUBLIC_ACCESS }
-        - { path: ^/, roles: PUBLIC_ACCESS }
         - { path: ^/about, roles: PUBLIC_ACCESS }
         - { path: ^/products, roles: PUBLIC_ACCESS }
         - { path: ^/contact, roles: PUBLIC_ACCESS }
@@ -87,6 +86,12 @@ security:
         # Staff access
         - { path: ^/staff, roles: ROLE_STAFF }
         - { path: ^/profile, roles: ROLE_STAFF }
+
+        # Customer portal — accessible by any logged-in user (ROLE_USER+)
+        - { path: ^/portal, roles: ROLE_USER }
+
+        # Catch-all public
+        - { path: ^/, roles: PUBLIC_ACCESS }
 when@test:
     security:
         password_hashers:

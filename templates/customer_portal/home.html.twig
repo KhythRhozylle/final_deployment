@@ -1,0 +1,263 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Shop - Florynn Handmade Bouquets{% endblock %}
+
+{% block body %}
+<style>
+    .portal-wrapper { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+    .portal-header { margin-bottom: 28px; }
+    .portal-header h1 { font-size: 1.9rem; font-weight: 700; color: #C35A7A; margin: 0 0 6px; }
+    .portal-header p { color: #6b4a5a; margin: 0; }
+
+    /* search bar */
+    .search-bar { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+    .search-bar input { flex: 1; min-width: 200px; padding: 10px 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; }
+    .search-bar select { padding: 10px 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; background: #fff; }
+    .search-bar button { padding: 10px 20px; background: #C35A7A; color: #fff; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; }
+    .search-bar button:hover { background: #a8435f; }
+
+    /* product grid */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px; }
+    .product-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.08); overflow: hidden; transition: transform .2s, box-shadow .2s; }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 6px 20px rgba(0,0,0,.13); }
+    .product-img { width: 100%; height: 180px; object-fit: cover; background: #f9eef2; }
+    .product-img-placeholder { width: 100%; height: 180px; background: linear-gradient(135deg,#F2C6A5,#C35A7A); display:flex; align-items:center; justify-content:center; color:#fff; font-size:2rem; }
+    .product-body { padding: 16px; }
+    .product-name { font-weight: 700; font-size: 1rem; color: #3E2723; margin: 0 0 6px; }
+    .product-price { color: #C35A7A; font-weight: 700; font-size: 1.1rem; margin: 0 0 4px; }
+    .product-stock { font-size: 0.8rem; color: #888; margin: 0 0 14px; }
+    .btn-add-cart { width: 100%; padding: 9px; background: #C35A7A; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background .2s; }
+    .btn-add-cart:hover:not(:disabled) { background: #a8435f; }
+    .btn-add-cart:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* cart sidebar */
+    .cart-btn { position: fixed; bottom: 28px; right: 28px; background: #C35A7A; color: #fff; border: none; border-radius: 50%; width: 58px; height: 58px; font-size: 1.4rem; cursor: pointer; box-shadow: 0 4px 16px rgba(195,90,122,.4); z-index: 999; }
+    .cart-badge { position: absolute; top: -6px; right: -6px; background: #e74c3c; color: #fff; border-radius: 50%; width: 22px; height: 22px; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .cart-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 360px; background: #fff; box-shadow: -4px 0 24px rgba(0,0,0,.15); z-index: 1000; transform: translateX(110%); transition: transform .3s; display: flex; flex-direction: column; }
+    .cart-panel.open { transform: none; }
+    .cart-head { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .cart-head h3 { margin: 0; color: #C35A7A; }
+    .cart-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #888; }
+    .cart-items { flex: 1; overflow-y: auto; padding: 16px; }
+    .cart-item { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; border-bottom: 1px solid #f5f5f5; padding-bottom: 14px; }
+    .cart-item-info { flex: 1; }
+    .cart-item-name { font-weight: 600; font-size: 0.9rem; color: #3E2723; }
+    .cart-item-price { color: #C35A7A; font-size: 0.9rem; }
+    .cart-qty { display: flex; align-items: center; gap: 8px; }
+    .cart-qty button { background: #f0e0e8; border: none; border-radius: 6px; width: 26px; height: 26px; cursor: pointer; font-weight: 700; }
+    .cart-qty span { min-width: 24px; text-align: center; font-weight: 600; }
+    .cart-foot { padding: 16px; border-top: 1px solid #eee; }
+    .cart-total { font-weight: 700; font-size: 1.05rem; margin-bottom: 12px; color: #3E2723; }
+    .btn-checkout { width: 100%; padding: 12px; background: #C35A7A; color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+    .btn-checkout:hover { background: #a8435f; }
+    .btn-checkout:disabled { background: #ccc; cursor: not-allowed; }
+    .notes-area { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; font-size: 0.9rem; resize: none; }
+
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 999; }
+    .overlay.active { display: block; }
+
+    .flash-msg { padding: 12px 18px; border-radius: 8px; margin-bottom: 18px; }
+    .flash-msg.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .flash-msg.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+</style>
+
+<div class="portal-wrapper">
+    <div class="portal-header">
+        <h1>🌸 Florynn Shop</h1>
+        <p>Welcome back, <strong>{{ app.user.name }}</strong>! Browse our handmade bouquets.</p>
+    </div>
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="flash-msg {{ label }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    {# Search / filter #}
+    <form class="search-bar" method="get">
+        <input type="text" name="search" placeholder="Search products…" value="{{ search }}">
+        <select name="category">
+            <option value="">All categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Search</button>
+    </form>
+
+    {# Product grid #}
+    <div class="product-grid">
+        {% for product in products %}
+            <div class="product-card">
+                {% if product.image %}
+                    <img class="product-img" src="{{ asset('uploads/images/' ~ product.image) }}" alt="{{ product.name }}">
+                {% else %}
+                    <div class="product-img-placeholder">🌸</div>
+                {% endif %}
+                <div class="product-body">
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-price">₱{{ product.price|number_format(2) }}</div>
+                    <div class="product-stock">
+                        {% if product.stock > 0 %}
+                            {{ product.stock }} in stock
+                        {% else %}
+                            <span style="color:#e74c3c">Out of stock</span>
+                        {% endif %}
+                    </div>
+                    <button class="btn-add-cart"
+                            data-id="{{ product.id }}"
+                            data-name="{{ product.name }}"
+                            data-price="{{ product.price }}"
+                            data-stock="{{ product.stock }}"
+                            {% if product.stock <= 0 %}disabled{% endif %}>
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+        {% else %}
+            <p style="color:#888;grid-column:1/-1">No products found.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{# Cart toggle button #}
+<button class="cart-btn" id="cartToggle" title="View cart" style="position:fixed">
+    🛒 <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+</button>
+
+{# Cart sidebar #}
+<div class="overlay" id="overlay"></div>
+<div class="cart-panel" id="cartPanel">
+    <div class="cart-head">
+        <h3>🛒 Your Cart</h3>
+        <button class="cart-close" id="cartClose">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+        <p style="color:#aaa;text-align:center;margin-top:30px">Your cart is empty</p>
+    </div>
+    <div class="cart-foot">
+        <div class="cart-total" id="cartTotal">Total: ₱0.00</div>
+        <textarea class="notes-area" id="orderNotes" rows="2" placeholder="Delivery notes (optional)…"></textarea>
+        <button class="btn-checkout" id="checkoutBtn" disabled>Place Order</button>
+    </div>
+</div>
+
+<script>
+const CHECKOUT_URL = "{{ path('app_portal_checkout') }}";
+let cart = {};  // productId → {name, price, qty, stock}
+
+function getCartItems() { return Object.values(cart).filter(i => i.qty > 0); }
+function cartTotal() { return getCartItems().reduce((s, i) => s + i.price * i.qty, 0); }
+function cartCount() { return getCartItems().reduce((s, i) => s + i.qty, 0); }
+
+function renderCart() {
+    const items = getCartItems();
+    const el = document.getElementById('cartItems');
+    const badge = document.getElementById('cartBadge');
+    const totalEl = document.getElementById('cartTotal');
+    const btn = document.getElementById('checkoutBtn');
+
+    if (items.length === 0) {
+        el.innerHTML = '<p style="color:#aaa;text-align:center;margin-top:30px">Your cart is empty</p>';
+        badge.style.display = 'none';
+        totalEl.textContent = 'Total: ₱0.00';
+        btn.disabled = true;
+        return;
+    }
+
+    el.innerHTML = items.map(i => `
+        <div class="cart-item">
+            <div class="cart-item-info">
+                <div class="cart-item-name">${i.name}</div>
+                <div class="cart-item-price">₱${(i.price * i.qty).toFixed(2)}</div>
+            </div>
+            <div class="cart-qty">
+                <button onclick="changeQty(${i.id}, -1)">−</button>
+                <span>${i.qty}</span>
+                <button onclick="changeQty(${i.id}, 1)">+</button>
+            </div>
+        </div>
+    `).join('');
+
+    badge.textContent = cartCount();
+    badge.style.display = 'flex';
+    totalEl.textContent = 'Total: ₱' + cartTotal().toFixed(2);
+    btn.disabled = false;
+}
+
+function changeQty(id, delta) {
+    if (!cart[id]) return;
+    cart[id].qty = Math.max(0, Math.min(cart[id].stock, cart[id].qty + delta));
+    if (cart[id].qty === 0) delete cart[id];
+    renderCart();
+}
+
+// "Add to cart" buttons
+document.querySelectorAll('.btn-add-cart').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const stock = parseInt(btn.dataset.stock, 10);
+        if (!cart[id]) {
+            cart[id] = { id, name: btn.dataset.name, price: parseFloat(btn.dataset.price), qty: 0, stock };
+        }
+        if (cart[id].qty < stock) {
+            cart[id].qty++;
+            renderCart();
+            openCart();
+        }
+    });
+});
+
+function openCart() {
+    document.getElementById('cartPanel').classList.add('open');
+    document.getElementById('overlay').classList.add('active');
+}
+function closeCart() {
+    document.getElementById('cartPanel').classList.remove('open');
+    document.getElementById('overlay').classList.remove('active');
+}
+
+document.getElementById('cartToggle').addEventListener('click', openCart);
+document.getElementById('cartClose').addEventListener('click', closeCart);
+document.getElementById('overlay').addEventListener('click', closeCart);
+
+document.getElementById('checkoutBtn').addEventListener('click', async () => {
+    const items = getCartItems();
+    if (!items.length) return;
+
+    const btn = document.getElementById('checkoutBtn');
+    btn.disabled = true;
+    btn.textContent = 'Placing order…';
+
+    const notes = document.getElementById('orderNotes').value.trim();
+    const payload = {
+        items: items.map(i => ({ productId: parseInt(i.id, 10), quantity: i.qty })),
+        notes: notes || null,
+    };
+
+    try {
+        const resp = await fetch(CHECKOUT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const result = await resp.json();
+        if (resp.ok && result.success) {
+            cart = {};
+            renderCart();
+            closeCart();
+            alert('✅ ' + result.message + '\n\nOrder ID: ' + result.orderGroupId + '\nTotal: ₱' + result.total.toFixed(2));
+            window.location.href = "{{ path('app_portal_orders') }}";
+        } else {
+            alert('❌ ' + (result.error || 'Order failed'));
+            btn.disabled = false;
+            btn.textContent = 'Place Order';
+        }
+    } catch (e) {
+        alert('❌ Network error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Place Order';
+    }
+});
+</script>
+{% endblock %}

@@ -34,6 +34,11 @@ class AuthenticationSuccessHandler implements AuthenticationSuccessHandlerInterf
             return new RedirectResponse($this->urlGenerator->generate('app_staff_home'));
         }
 
+        // Regular registered customers go to the customer portal.
+        if (in_array('ROLE_USER', $roles, true)) {
+            return new RedirectResponse($this->urlGenerator->generate('app_customer_portal'));
+        }
+
         return new RedirectResponse($this->urlGenerator->generate('app_home'));
     }
 }

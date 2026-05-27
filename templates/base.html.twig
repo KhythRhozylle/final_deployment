@@ -369,9 +369,15 @@
                 <a href="{{ path('app_product_index') }}"><i class="fas fa-box"></i> <span>Bouquets</span></a>
                 <a href="{{ path('app_order_index') }}"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a>
                 <a href="{{ path('app_customer_index') }}"><i class="fas fa-user-friends"></i> <span>Customers</span></a>
+                <a href="{{ path('app_contact_inquiries') }}"><i class="fas fa-envelope"></i> <span>Contact inquiries</span></a>
                 <a href="{{ path('app_profile_show') }}"><i class="fas fa-user"></i> <span>My Profile</span></a>
             {% endif %}
             
+            {% if is_granted('ROLE_USER') and not is_granted('ROLE_STAFF') %}
+                <a href="{{ path('app_customer_portal') }}"><i class="fas fa-store"></i> <span>Shop</span></a>
+                <a href="{{ path('app_portal_orders') }}"><i class="fas fa-box-open"></i> <span>My Orders</span></a>
+            {% endif %}
+
             {% if app.user %}
                 <a href="{{ path('app_logout') }}"><i class="fas fa-door-open"></i> <span>Logout</span></a>
             {% else %}

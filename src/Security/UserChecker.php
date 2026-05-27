@@ -20,7 +20,11 @@ final class UserChecker implements UserCheckerInterface
         }
 
         if (!$user->isActive()) {
-            throw new CustomUserMessageAccountStatusException('Your account is disabled.');
+            throw new CustomUserMessageAccountStatusException('Your account is disabled. Please contact support.');
         }
+
+        // We intentionally do NOT block unverified accounts here.
+        // Email verification is best-effort (SMTP may be unavailable on Railway).
+        // Unverified accounts can log in; they simply see a banner nudging them to verify.
     }
 }
