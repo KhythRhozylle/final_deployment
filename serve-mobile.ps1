@@ -1,24 +1,33 @@
-# Start Symfony so the React Native app (emulator / phone) can connect.
-# Plain "symfony serve:start" only binds 127.0.0.1 — mobile cannot reach that.
-#
-# From this folder (florynn):
-#   .\serve-mobile.ps1
-#
-# Then in ovalo:
-#   npm run android:dev   (emulator + adb reverse)
-#   npm run api:sync-host && npm run android   (physical phone)
+# One API server for admin dashboard + mobile app (same database, same port).
+# From florynn:  .\serve-mobile.ps1
+# From ovalo:    npm run dev:connect
 
-Write-Host "Stopping any existing Symfony server on port 8000..." -ForegroundColor Cyan
+& (Join-Path $PSScriptRoot 'scripts\stop-docker-app.ps1')
+
+if (Get-Command docker -ErrorAction SilentlyContinue) {
+    $mysqlRunning = docker compose ps mysql 2>$null | Select-String -Pattern 'running'
+    if (-not $mysqlRunning) {
+        Write-Host "Starting Docker MySQL (florynnshop_db on port 3308)..." -ForegroundColor Cyan
+        docker compose up -d mysql
+        Start-Sleep -Seconds 8
+    }
+}
+
+Write-Host "Stopping anything on port 8000..." -ForegroundColor Cyan
 symfony server:stop 2>$null
+Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue |
+    ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
 Start-Sleep -Seconds 2
 
 Write-Host @"
 
-Starting for MOBILE dev (--allow-all-ip --allow-http)
-  - Emulator: use ovalo npm run android:dev (adb reverse)
-  - Phone:    set androidHost to your PC IP in ovalo/src/config/api.local.js
+Listening on http://0.0.0.0:8000 (admin + mobile use the SAME server)
+  Verify: http://127.0.0.1:8000/api/mobile/status
 
-"@ -ForegroundColor Yellow
+  ovalo: npm run dev:connect  (then reload app)
 
-$env:SYMFONY_ALLOW_ALL_IP = 'true'
-symfony serve:start --allow-all-ip --allow-http
+"@ -ForegroundColor Cyan
+
+$php = (Get-Command php).Source
+Set-Location $PSScriptRoot
+& $php -S 0.0.0.0:8000 -t public

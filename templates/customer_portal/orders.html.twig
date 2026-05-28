@@ -61,14 +61,34 @@
                 {% set total = total + (o.price * o.quantity) %}
             {% endfor %}
 
+            {% set groupStatus = first.status|lower %}
+            {% for o in groupOrders %}
+                {% if o.status|lower == 'cancelled' %}
+                    {% set groupStatus = 'cancelled' %}
+                {% elseif o.status|lower != 'pending' and groupStatus != 'cancelled' %}
+                    {% set groupStatus = o.status|lower %}
+                {% endif %}
+            {% endfor %}
+
+            {% if groupStatus == 'cancelled' %}
+                {% set customerMessage = 'Order cancelled' %}
+                {% set statusClass = 'cancelled' %}
+            {% elseif groupStatus in ['confirmed', 'preparing', 'out_for_delivery', 'delivered', 'completed', 'processing'] %}
+                {% set customerMessage = 'Order has been placed' %}
+                {% set statusClass = 'confirmed' %}
+            {% else %}
+                {% set customerMessage = 'Pending approval' %}
+                {% set statusClass = 'pending' %}
+            {% endif %}
+
             <div class="order-card">
                 <div class="order-head">
                     <div>
                         <div class="order-id">Order #{{ gid|slice(0, 8) }}…</div>
                         <div class="order-date">{{ first.orderDate ? first.orderDate|date('M d, Y g:i A') : '' }}</div>
                     </div>
-                    <span class="order-status status-{{ first.status|replace({' ': '_'}) }}">
-                        {{ first.status|replace({'_': ' '})|capitalize }}
+                    <span class="order-status status-{{ statusClass }}">
+                        {{ customerMessage }}
                     </span>
                 </div>
                 <div class="order-body">

@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\ContactInquiry;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -10,6 +12,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/contact')]
 final class ContactController extends AbstractController
 {
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+    ) {}
+
     #[Route('/', name: 'app_contact_us', methods: ['GET', 'POST'])]
     public function contact(Request $request): Response
     {
@@ -25,7 +31,15 @@ final class ContactController extends AbstractController
                 if ($name === '' || $email === '' || $message === '') {
                     $this->addFlash('error', 'Please fill out all fields.');
                 } else {
-                    // In a real app, you'd send an email here (mailer integration).
+                    $inquiry = (new ContactInquiry())
+                        ->setName($name)
+                        ->setEmail($email)
+                        ->setMessage($message)
+                        ->setSource('web');
+
+                    $this->entityManager->persist($inquiry);
+                    $this->entityManager->flush();
+
                     $this->addFlash('success', 'Thanks for contacting us! We will get back to you soon.');
 
                     return $this->redirectToRoute('app_contact_us', [], Response::HTTP_SEE_OTHER);

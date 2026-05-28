@@ -8,10 +8,16 @@ namespace App\Service;
  */
 final class AppUrlService
 {
+    private readonly string $appUrl;
+
+    private readonly string $railwayPublicDomain;
+
     public function __construct(
-        private readonly string $appUrl = '',
-        private readonly string $railwayPublicDomain = '',
+        ?string $appUrl = null,
+        ?string $railwayPublicDomain = null,
     ) {
+        $this->appUrl = $appUrl ?? '';
+        $this->railwayPublicDomain = $railwayPublicDomain ?? '';
     }
 
     public function getBaseUrl(): ?string

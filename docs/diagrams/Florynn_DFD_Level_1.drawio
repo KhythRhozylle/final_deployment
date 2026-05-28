@@ -1,0 +1,178 @@
+<mxfile host="app.diagrams.net" modified="2026-05-28T02:15:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="florynn-level1-dfd" name="Level 1 DFD">
+    <mxGraphModel dx="1935" dy="1243" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="e1" value="&lt;b&gt;GUEST CUSTOMER&lt;/b&gt;&lt;br&gt;&lt;br&gt;Mobile App" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="40" y="140" width="180" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="&lt;b&gt;REGISTERED CUSTOMER&lt;/b&gt;&lt;br&gt;&lt;br&gt;Mobile App" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="40" y="520" width="180" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="p1" value="&lt;b&gt;P1&lt;/b&gt;&lt;br&gt;Browse Flowers &amp;&lt;br&gt;Categories" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="320" y="60" width="260" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2" value="&lt;b&gt;P2&lt;/b&gt;&lt;br&gt;Shopping Cart&lt;br&gt;Management" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="320" y="180" width="260" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p3" value="&lt;b&gt;P3&lt;/b&gt;&lt;br&gt;Login &amp; Register" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="320" y="300" width="260" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4" value="&lt;b&gt;P4&lt;/b&gt;&lt;br&gt;Checkout, Profile &amp;&lt;br&gt;Address" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="320" y="420" width="260" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5" value="&lt;b&gt;P5&lt;/b&gt;&lt;br&gt;Place Order &amp;&lt;br&gt;Notification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="320" y="540" width="260" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6" value="&lt;b&gt;P6&lt;/b&gt;&lt;br&gt;Order Tracking &amp;&lt;br&gt;Purchase History" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="320" y="660" width="260" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1g" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="690" y="45" width="320" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1id" value="&lt;b&gt;D1&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=15;" vertex="1" parent="d1g">
+          <mxGeometry width="70" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d1txt" value="&lt;b&gt;User Session &amp; Profile Cache&lt;/b&gt;&lt;br&gt;AsyncStorage" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="d1g">
+          <mxGeometry x="70" width="250" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2g" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="690" y="165" width="320" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2id" value="&lt;b&gt;D2&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=15;" vertex="1" parent="d2g">
+          <mxGeometry width="70" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d2txt" value="&lt;b&gt;Flowers &amp; Inventory Database&lt;/b&gt;&lt;br&gt;Symfony / MySQL" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="d2g">
+          <mxGeometry x="70" width="250" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d3g" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="690" y="285" width="320" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d3id" value="&lt;b&gt;D3&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=15;" vertex="1" parent="d3g">
+          <mxGeometry width="70" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d3txt" value="&lt;b&gt;Local Cart Storage&lt;/b&gt;&lt;br&gt;AsyncStorage" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="d3g">
+          <mxGeometry x="70" width="250" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d4g" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="690" y="405" width="320" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d4id" value="&lt;b&gt;D4&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=15;" vertex="1" parent="d4g">
+          <mxGeometry width="70" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d4txt" value="&lt;b&gt;Orders &amp; Payments Database&lt;/b&gt;&lt;br&gt;Symfony / MySQL" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="d4g">
+          <mxGeometry x="70" width="250" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d5g" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="690" y="525" width="320" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d5id" value="&lt;b&gt;D5&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=15;" vertex="1" parent="d5g">
+          <mxGeometry width="70" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="d5txt" value="&lt;b&gt;Notifications &amp; Delivery Status Storage&lt;/b&gt;&lt;br&gt;AsyncStorage" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="d5g">
+          <mxGeometry x="70" width="250" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="o1" value="Login / Session&lt;br&gt;Status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="60" width="230" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="o2" value="Flower Catalog &amp;&lt;br&gt;Product Details" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="170" width="230" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="o3" value="Cart Summary &amp;&lt;br&gt;Total Amount" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="280" width="230" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="o4" value="Order Confirmation&lt;br&gt;&amp; Receipt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="390" width="230" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="o5" value="Order Status &amp;&lt;br&gt;Delivery Tracking" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="500" width="230" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="o6" value="Notifications &amp;&lt;br&gt;Promo Alerts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="610" width="230" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="title" value="&lt;b&gt;THE FLORYNN — Mobile Flower Ordering App&lt;/b&gt;&lt;br&gt;Data Flow Diagram — Level 1&lt;br&gt;React Native + Symfony REST API" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=13;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="860" width="500" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend1" value="External Entity" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=12;align=center;" vertex="1" parent="1">
+          <mxGeometry x="260" y="980" width="150" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend2" value="Process" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=12;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="980" width="120" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend3" value="Data Store" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=12;align=center;" vertex="1" parent="1">
+          <mxGeometry x="550" y="980" width="120" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend4" value="Output to UI" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontFamily=Times New Roman;fontSize=12;align=center;" vertex="1" parent="1">
+          <mxGeometry x="680" y="980" width="140" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="l1" edge="1" parent="1" source="e1" target="p1" value="Browse / Search Flowers" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=block;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l2" edge="1" parent="1" source="e1" target="p2" value="Add to Cart / View Cart" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=block;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l3" edge="1" parent="1" source="e1" target="p3" value="Login / Register Prompt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=block;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l4" edge="1" parent="1" source="e2" target="p4" value="Checkout Request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=block;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l5" edge="1" parent="1" source="e2" target="p6" value="Track Orders" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=block;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l6" edge="1" parent="1" source="p1" target="p2" value="Select Product" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=block;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l7" edge="1" parent="1" source="p2" target="p3" value="Proceed to Checkout (Auth Required)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=block;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l8" edge="1" parent="1" source="p3" target="p4" value="Authenticated Session" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=block;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l9" edge="1" parent="1" source="p4" target="p5" value="Confirm Checkout / Submit Order" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=block;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l10" edge="1" parent="1" source="p5" target="p6" value="Order Created / Track Status" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=block;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l11" edge="1" parent="1" source="p3" target="d1id" value="Session / Profile Data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l12" edge="1" parent="1" source="p1" target="d2id" value="Catalog Query" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l13" edge="1" parent="1" source="p2" target="d3id" value="Cart Items / Totals" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l14" edge="1" parent="1" source="p5" target="d4id" value="Order + Payment Record" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l15" edge="1" parent="1" source="p5" target="d5id" value="Order / Promo Notifications" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l16" edge="1" parent="1" source="p6" target="d4id" value="Order Status Query" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l17" edge="1" parent="1" source="d1id" target="o1" value="Login Status" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l18" edge="1" parent="1" source="d2id" target="o2" value="Product Details" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l19" edge="1" parent="1" source="d3id" target="o3" value="Cart Items &amp; Total" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l20" edge="1" parent="1" source="d4id" target="o4" value="Order Confirmation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l21" edge="1" parent="1" source="d4id" target="o5" value="Tracking Data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l22" edge="1" parent="1" source="d5id" target="o6" value="Notification Feed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;fontFamily=Times New Roman;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

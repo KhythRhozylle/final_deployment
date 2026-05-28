@@ -14,7 +14,7 @@ return array (
     array (
       0 => 'ROLE_ADMIN',
     ),
-    'password' => '$2y$13$3k0JeCMV7J4deuT6utRUd.XCcYoHr0eCEExQge4.CJGH68VFxrR3i',
+    'password' => '$2y$13$4oKkzIHC3O1xE5iQp0G.Bu5rCD9yYwEFDHkQz/FPBejN5aviKnNce',
     'name' => 'Khyth Rhozylle Ovalo (Ovalo, Khyth Rhozylle S.)',
     'created_at' => '2026-04-07 17:00:31',
     'is_active' => 1,
