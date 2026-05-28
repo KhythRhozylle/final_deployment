@@ -499,12 +499,52 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .orders-live-toast {
+        position: fixed;
+        top: 20px;
+        right: 24px;
+        z-index: 9999;
+        background: #2E7D32;
+        color: white;
+        padding: 14px 20px;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: none;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.3s ease;
+    }
+
+    .orders-live-toast.show { display: flex; }
+
+    .orders-live-indicator {
+        font-size: 0.75rem;
+        color: #6D4C41;
+        margin-left: 12px;
+        font-weight: 500;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
 </style>
 
 <div class="orders-container">
     <!-- Header -->
+    <div id="orders-live-toast" class="orders-live-toast" role="status" aria-live="polite">
+        <i class="fas fa-bell"></i>
+        <span id="orders-live-toast-text">New order received</span>
+    </div>
+
     <div class="orders-header">
-        <h1><i class="fas fa-shopping-cart"></i> Orders Management</h1>
+        <h1>
+            <i class="fas fa-shopping-cart"></i> Orders Management
+            <span class="orders-live-indicator" id="orders-live-indicator">Live updates on</span>
+        </h1>
         <div class="header-actions">
             <a href="{{ path('app_order_new') }}" class="btn-add">
                 <i class="fas fa-plus"></i> New Order
@@ -512,53 +552,8 @@
         </div>
     </div>
 
-    <!-- Stats Overview -->
-    <div class="orders-stats">
-        <div class="stat-box total">
-            <h3>Total Orders</h3>
-            <p class="stat-value">{{ orders|length }}</p>
-        </div>
-        <div class="stat-box pending">
-            <h3>Pending</h3>
-            <p class="stat-value">{{ orders|filter(o => (o.status ?? '')|lower == 'pending')|length }}</p>
-        </div>
-        <div class="stat-box completed">
-            <h3>Completed</h3>
-            <p class="stat-value">{{ orders|filter(o => (o.status ?? '')|lower in ['completed', 'delivered', 'confirmed'])|length }}</p>
-        </div>
-        <div class="stat-box cancelled">
-            <h3>Cancelled</h3>
-            <p class="stat-value">{{ orders|filter(o => (o.status ?? '')|lower in ['cancelled', 'rejected'])|length }}</p>
-        </div>
-    </div>
-
-    {% if pendingMobileGroups is defined and pendingMobileGroups|length > 0 %}
-    <div class="mobile-pending-panel">
-        <h2><i class="fas fa-bell"></i> Mobile orders awaiting approval ({{ pendingMobileGroups|length }})</h2>
-        <p style="font-size: 0.85rem; color: #6D4C41; margin: 0 0 14px;">
-            Review stock availability, then confirm or reject. Approving deducts inventory and updates the customer app.
-        </p>
-        {% for group in pendingMobileGroups %}
-        <div class="mobile-order-row">
-            <div>
-                <strong>{% if group.customer %}{{ group.customer.name|default('Customer') }}{% else %}Customer{% endif %}</strong>
-                <span class="source-badge">Mobile app</span>
-                <div style="font-size: 0.8rem; color: #666; margin-top: 4px;">
-                    {{ group.lines|length }} item(s) · ₱{{ group.total|number_format(2) }}
-                    {% if group.canApprove %}
-                        · <span style="color:#2E7D32;">Stock OK</span>
-                    {% else %}
-                        · <span style="color:#C62828;">Low stock</span>
-                    {% endif %}
-                </div>
-            </div>
-            <a href="{{ path('app_order_group_review', { orderGroupId: group.orderGroupId }) }}" class="btn-review">
-                <i class="fas fa-clipboard-check"></i> Review & approve
-            </a>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
+    {% include 'order/_stats.html.twig' %}
+    {% include 'order/_pending_mobile.html.twig' %}
 
     <!-- Orders DataTable -->
     <div class="table-container">
@@ -577,74 +572,8 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                {% for order in orders %}
-                    <tr>
-                        <td>
-                            <span class="order-id">#{{ order.id }}</span>
-                            {% if order.orderGroupId %}
-                                <br><small style="color:#999;">{{ order.orderGroupId|slice(0, 8) }}…</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if order.source == 'mobile' %}
-                                <span class="source-badge">Mobile</span>
-                            {% elseif order.source == 'web' %}
-                                <span class="source-badge" style="background:#E8F5E9;color:#2E7D32;">Web</span>
-                            {% else %}
-                                <span style="font-size:0.75rem;color:#999;">Staff</span>
-                            {% endif %}
-                        </td>
-                        <td>{% if order.customer is not null and order.customer.id is defined and order.customer.id != 0 %}{{ order.customer.name }}{% else %}N/A{% endif %}</td>
-                        <td>{{ order.productName }}</td>
-                        <td><span class="price">₱{{ order.price|number_format(2) }}</span></td>
-                        <td>
-                            <div class="status-cell">
-                                <span class="status-badge {{ (order.status ?? 'pending')|lower|replace({' ': '_'}) }}">
-                                    {{ order.status ?? 'Pending' }}
-                                </span>
-                                {% if is_granted('ROLE_ADMIN') and (order.status ?? '')|lower == 'pending' %}
-                                    <div class="status-actions">
-                                        <form method="post" action="{{ path('app_order_accept', { id: order.id }) }}" style="display:inline;">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('approve_order') }}">
-                                            <button type="submit" class="btn-status btn-status-accept" title="Accept order">
-                                                <i class="fas fa-check"></i> Accept
-                                            </button>
-                                        </form>
-                                        <form method="post" action="{{ path('app_order_cancel', { id: order.id }) }}" style="display:inline;" onsubmit="return confirm('Cancel this order? The customer will see it as cancelled.');">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('cancel_order') }}">
-                                            <button type="submit" class="btn-status btn-status-cancel" title="Cancel order">
-                                                <i class="fas fa-times"></i> Cancel
-                                            </button>
-                                        </form>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>
-                            {% set paymentStatus = (order.paymentStatus ?? 'unpaid')|lower %}
-                            <span class="payment-badge {{ paymentStatus }}">
-                                {{ paymentStatus|replace({'_': ' '}) }}
-                            </span>
-                        </td>
-                        <td data-order="{{ order.orderDate|date('Y-m-d') }}">{{ order.orderDate|date('M d, Y') }}</td>
-                        <td>
-                            <div class="action-buttons">
-                                {% if order.source == 'mobile' and order.orderGroupId and order.status == 'pending' and is_granted('ROLE_ADMIN') %}
-                                <a href="{{ path('app_order_group_review', { orderGroupId: order.orderGroupId }) }}" class="btn-action btn-edit" title="Review & approve">
-                                    <i class="fas fa-clipboard-check"></i>
-                                </a>
-                                {% endif %}
-                                <a href="{{ path('app_order_show', {'id': order.id}) }}" class="btn-action btn-view">
-                                    <i class="fas fa-eye"></i> 
-                                </a>
-                                <a href="{{ path('app_order_edit', {'id': order.id}) }}" class="btn-action btn-edit">
-                                    <i class="fas fa-edit"></i> 
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
+                <tbody id="orders-live-tbody">
+                {% include 'order/_table_rows.html.twig' %}
                 </tbody>
             </table>
         {% else %}
@@ -673,34 +602,98 @@
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
     
     <script>
-        $(document).ready(function() {
-            $('#ordersTable').DataTable({
-                responsive: true,
-                pageLength: 10,
-                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-                order: [[0, 'desc']], // Sort by Order ID descending
-                columnDefs: [
-                    { orderable: false, targets: [8] }
-                ],
-                language: {
-                    search: "Search Orders:",
-                    lengthMenu: "Show _MENU_ orders",
-                    info: "Showing _START_ to _END_ of _TOTAL_ orders",
-                    infoEmpty: "No orders available",
-                    infoFiltered: "(filtered from _MAX_ total orders)",
-                    zeroRecords: "No matching orders found",
-                    paginate: {
-                        first: "First",
-                        last: "Last",
-                        next: "Next",
-                        previous: "Previous"
-                    }
-                },
-                dom: '<"top"lf>rt<"bottom"ip><"clear">',
-                initComplete: function() {
-                    console.log('DataTable initialized successfully');
+        (function () {
+            const LIVE_URL = {{ path('app_order_live_updates')|json_encode|raw }};
+            let liveRevision = {{ liveRevision|default(0) }};
+            let ordersDataTable = null;
+
+            function initOrdersDataTable() {
+                const $table = $('#ordersTable');
+                if (!$table.length) return;
+
+                if ($.fn.DataTable.isDataTable($table)) {
+                    $table.DataTable().destroy();
                 }
+
+                ordersDataTable = $table.DataTable({
+                    responsive: true,
+                    pageLength: 10,
+                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+                    order: [[0, 'desc']],
+                    columnDefs: [{ orderable: false, targets: [8] }],
+                    language: {
+                        search: 'Search Orders:',
+                        lengthMenu: 'Show _MENU_ orders',
+                        info: 'Showing _START_ to _END_ of _TOTAL_ orders',
+                        infoEmpty: 'No orders available',
+                        infoFiltered: '(filtered from _MAX_ total orders)',
+                        zeroRecords: 'No matching orders found',
+                    },
+                    dom: '<"top"lf>rt<"bottom"ip><"clear">',
+                });
+            }
+
+            function showLiveToast(message) {
+                const toast = document.getElementById('orders-live-toast');
+                const text = document.getElementById('orders-live-toast-text');
+                if (!toast || !text) return;
+                text.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 5000);
+            }
+
+            function applyLiveUpdate(payload) {
+                const statsHost = document.getElementById('orders-live-stats');
+                if (statsHost && payload.statsHtml) {
+                    statsHost.outerHTML = payload.statsHtml;
+                }
+
+                const pendingHost = document.getElementById('orders-live-pending');
+                if (pendingHost && payload.pendingHtml !== undefined) {
+                    pendingHost.outerHTML = payload.pendingHtml;
+                }
+
+                const tbody = document.getElementById('orders-live-tbody');
+                if (tbody && payload.tableRowsHtml !== undefined) {
+                    tbody.innerHTML = payload.tableRowsHtml;
+                    initOrdersDataTable();
+                }
+
+                const prevPending = parseInt(document.body.dataset.pendingMobile || '0', 10);
+                const nextPending = payload.pendingMobileCount || 0;
+                document.body.dataset.pendingMobile = String(nextPending);
+
+                if (nextPending > prevPending) {
+                    showLiveToast('New mobile order — review pending approval');
+                } else {
+                    showLiveToast('Orders updated');
+                }
+            }
+
+            async function pollOrdersLive() {
+                try {
+                    const res = await fetch(LIVE_URL, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        credentials: 'same-origin',
+                    });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (data.revision === liveRevision) return;
+                    liveRevision = data.revision;
+                    applyLiveUpdate(data);
+                } catch (e) {
+                    console.warn('Live order poll failed', e);
+                }
+            }
+
+            $(document).ready(function () {
+                document.body.dataset.pendingMobile = '{{ pendingMobileGroups|length }}';
+                initOrdersDataTable();
+                setInterval(pollOrdersLive, 4000);
+                document.addEventListener('visibilitychange', function () {
+                    if (!document.hidden) pollOrdersLive();
+                });
             });
-        });
+        })();
     </script>
 {% endblock %}

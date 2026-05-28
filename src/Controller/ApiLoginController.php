@@ -22,15 +22,32 @@ class ApiLoginController extends AbstractController
 
         return $this->json([
             'success' => true,
-            'user' => [
-                'id' => $user->getId(),
-                'email' => $user->getUserIdentifier(),
-                'username' => $user->getUsername(),
-                'name' => $user->getName(),
-                'roles' => $user->getRoles(),
-                'isVerified' => $user->isVerified(),
-            ]
+            'user' => $this->serializeMobileUser($user),
         ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function serializeMobileUser(\App\Entity\User $user): array
+    {
+        return [
+            'id' => $user->getId(),
+            'email' => $user->getUserIdentifier(),
+            'username' => $user->getUsername(),
+            'name' => $user->getName(),
+            'roles' => $user->getRoles(),
+            'roleLabel' => $this->mobileRoleLabel($user),
+            'isVerified' => $user->isVerified(),
+        ];
+    }
+
+    private function mobileRoleLabel(\App\Entity\User $user): string
+    {
+        $stored = $user->getRoles();
+        if (\in_array('ROLE_ADMIN', $stored, true) || \in_array('ROLE_STAFF', $stored, true)) {
+            return $user->getPrimaryRoleLabel();
+        }
+
+        return 'User';
     }
 }
 

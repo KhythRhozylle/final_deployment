@@ -88,6 +88,8 @@ class ApiRegistrationController extends AbstractController
                 'email' => $user->getEmail(),
                 'username' => $user->getUsername(),
                 'name' => $user->getName(),
+                'roles' => $user->getRoles(),
+                'roleLabel' => 'User',
                 'isVerified' => $user->isVerified(),
             ],
         ], Response::HTTP_CREATED);

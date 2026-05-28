@@ -8,8 +8,10 @@ use App\Repository\ProductRepository;
 use App\Repository\OrderRepository;
 use App\Service\ActivityLogService;
 use App\Service\OrderApprovalService;
+use App\Service\OrderLiveRevisionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -23,7 +25,45 @@ final class OrderController extends AbstractController
     public function index(
         OrderRepository $orderRepository,
         OrderApprovalService $orderApprovalService,
+        OrderLiveRevisionService $liveRevisionService,
     ): Response {
+        $view = $this->buildOrdersViewData($orderRepository, $orderApprovalService);
+
+        return $this->render('order/index.html.twig', [
+            ...$view,
+            'liveRevision' => $liveRevisionService->current(),
+        ]);
+    }
+
+    /**
+     * Polled by admin orders page — returns fresh HTML when a customer transacts on mobile.
+     */
+    #[Route('/live-updates', name: 'app_order_live_updates', methods: ['GET'])]
+    public function liveUpdates(
+        OrderRepository $orderRepository,
+        OrderApprovalService $orderApprovalService,
+        OrderLiveRevisionService $liveRevisionService,
+    ): JsonResponse {
+        $view = $this->buildOrdersViewData($orderRepository, $orderApprovalService);
+        $revision = $liveRevisionService->current();
+
+        return new JsonResponse([
+            'revision' => $revision,
+            'statsHtml' => $this->renderView('order/_stats.html.twig', $view),
+            'pendingHtml' => $this->renderView('order/_pending_mobile.html.twig', $view),
+            'tableRowsHtml' => $this->renderView('order/_table_rows.html.twig', $view),
+            'orderCount' => \count($view['orders']),
+            'pendingMobileCount' => \count($view['pendingMobileGroups']),
+        ]);
+    }
+
+    /**
+     * @return array{orders: list<Order>, pendingMobileGroups: list<array<string, mixed>>}
+     */
+    private function buildOrdersViewData(
+        OrderRepository $orderRepository,
+        OrderApprovalService $orderApprovalService,
+    ): array {
         if ($this->isGranted('ROLE_ADMIN')) {
             $orders = $orderRepository->findAll();
         } else {
@@ -41,10 +81,10 @@ final class OrderController extends AbstractController
             }
         }
 
-        return $this->render('order/index.html.twig', [
+        return [
             'orders' => $orders,
             'pendingMobileGroups' => $pendingMobileGroups,
-        ]);
+        ];
     }
 
     #[Route('/mobile/{orderGroupId}/review', name: 'app_order_group_review', methods: ['GET'])]
@@ -179,7 +219,13 @@ final class OrderController extends AbstractController
     }
 
     #[Route('/new', name: 'app_order_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, ActivityLogService $logService, ProductRepository $productRepository): Response
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ActivityLogService $logService,
+        ProductRepository $productRepository,
+        OrderLiveRevisionService $orderLiveRevision,
+    ): Response
     {
         $order = new Order();
         $form = $this->createForm(OrderType::class, $order);
@@ -241,6 +287,8 @@ final class OrderController extends AbstractController
             $entityManager->persist($order);
             $entityManager->flush();
 
+            $orderLiveRevision->bump();
+
             $logService->logCreate($this->getUser(), 'Order', $order->getId(), [
                 'productName' => $order->getProductName(),
                 'quantity' => (string) $order->getQuantity()
@@ -282,6 +330,7 @@ final class OrderController extends AbstractController
         EntityManagerInterface $entityManager,
         ActivityLogService $logService,
         OrderApprovalService $orderApprovalService,
+        OrderLiveRevisionService $orderLiveRevision,
     ): Response {
         // Staff can only edit their own records
         if (!$this->isGranted('ROLE_ADMIN') && $order->getCreatedBy() !== $this->getUser()) {
@@ -301,10 +350,13 @@ final class OrderController extends AbstractController
                     $orderApprovalService->syncMobileGroupStatus($order->getOrderGroupId(), $normalized);
                 } else {
                     $order->setStatus($normalized);
+                    $entityManager->flush();
+                    $orderLiveRevision->bump();
                 }
+            } else {
+                $entityManager->flush();
+                $orderLiveRevision->bump();
             }
-
-            $entityManager->flush();
 
             $logService->logUpdate($this->getUser(), 'Order', $order->getId(), [
                 'productName' => $order->getProductName(),
@@ -322,7 +374,13 @@ final class OrderController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_order_delete', methods: ['POST'])]
-    public function delete(Request $request, Order $order, EntityManagerInterface $entityManager, ActivityLogService $logService): Response
+    public function delete(
+        Request $request,
+        Order $order,
+        EntityManagerInterface $entityManager,
+        ActivityLogService $logService,
+        OrderLiveRevisionService $orderLiveRevision,
+    ): Response
     {
         // Staff can only delete their own records
         if (!$this->isGranted('ROLE_ADMIN') && $order->getCreatedBy() !== $this->getUser()) {
@@ -337,6 +395,7 @@ final class OrderController extends AbstractController
             ];
             $entityManager->remove($order);
             $entityManager->flush();
+            $orderLiveRevision->bump();
             $logService->logDelete($this->getUser(), 'Order', $orderId, $orderData);
         }
 

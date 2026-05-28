@@ -1,0 +1,29 @@
+<div id="orders-live-pending">
+{% if pendingMobileGroups is defined and pendingMobileGroups|length > 0 %}
+<div class="mobile-pending-panel">
+    <h2><i class="fas fa-bell"></i> Mobile orders awaiting approval ({{ pendingMobileGroups|length }})</h2>
+    <p style="font-size: 0.85rem; color: #6D4C41; margin: 0 0 14px;">
+        Review stock availability, then confirm or reject. Approving deducts inventory and updates the customer app.
+    </p>
+    {% for group in pendingMobileGroups %}
+    <div class="mobile-order-row">
+        <div>
+            <strong>{% if group.customer %}{{ group.customer.name|default('Customer') }}{% else %}Customer{% endif %}</strong>
+            <span class="source-badge">Mobile app</span>
+            <div style="font-size: 0.8rem; color: #666; margin-top: 4px;">
+                {{ group.lines|length }} item(s) · ₱{{ group.total|number_format(2) }}
+                {% if group.canApprove %}
+                    · <span style="color:#2E7D32;">Stock OK</span>
+                {% else %}
+                    · <span style="color:#C62828;">Low stock</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{{ path('app_order_group_review', { orderGroupId: group.orderGroupId }) }}" class="btn-review">
+            <i class="fas fa-clipboard-check"></i> Review & approve
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+</div>

@@ -26,7 +26,7 @@ final class MobileGoogleAuthService
         if ($user instanceof User) {
             if ($this->isStaffOrAdmin($user)) {
                 throw new \InvalidArgumentException(
-                    'This Google account is linked to a staff profile. Use email and password in the admin portal.',
+                    'This Google account is for admin use only. Please use the admin portal.',
                 );
             }
 

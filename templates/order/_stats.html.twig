@@ -1,0 +1,18 @@
+<div class="orders-stats" id="orders-live-stats">
+    <div class="stat-box total">
+        <h3>Total Orders</h3>
+        <p class="stat-value" data-stat="total">{{ orders|length }}</p>
+    </div>
+    <div class="stat-box pending">
+        <h3>Pending</h3>
+        <p class="stat-value" data-stat="pending">{{ orders|filter(o => (o.status ?? '')|lower == 'pending')|length }}</p>
+    </div>
+    <div class="stat-box completed">
+        <h3>Completed</h3>
+        <p class="stat-value" data-stat="completed">{{ orders|filter(o => (o.status ?? '')|lower in ['completed', 'delivered', 'confirmed'])|length }}</p>
+    </div>
+    <div class="stat-box cancelled">
+        <h3>Cancelled</h3>
+        <p class="stat-value" data-stat="cancelled">{{ orders|filter(o => (o.status ?? '')|lower in ['cancelled', 'rejected'])|length }}</p>
+    </div>
+</div>

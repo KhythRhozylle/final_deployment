@@ -15,6 +15,7 @@ class OrderApprovalService
         private EntityManagerInterface $entityManager,
         private OrderRepository $orderRepository,
         private ProductRepository $productRepository,
+        private OrderLiveRevisionService $orderLiveRevision,
     ) {}
 
     /**
@@ -265,6 +266,7 @@ class OrderApprovalService
         }
 
         $this->entityManager->flush();
+        $this->orderLiveRevision->bump();
 
         return [
             'approved' => true,
@@ -326,6 +328,7 @@ class OrderApprovalService
         }
 
         $this->entityManager->flush();
+        $this->orderLiveRevision->bump();
 
         return [
             'rejected' => true,
@@ -380,12 +383,19 @@ class OrderApprovalService
     public function syncMobileGroupStatus(string $orderGroupId, string $status): void
     {
         $normalized = MobileOrderService::normalizeStatus($status);
+        $changed = false;
         foreach ($this->getOrdersInGroup($orderGroupId) as $order) {
             if ($order->getSource() !== 'mobile') {
                 continue;
             }
             $order->setStatus($normalized);
             $this->entityManager->persist($order);
+            $changed = true;
+        }
+
+        if ($changed) {
+            $this->entityManager->flush();
+            $this->orderLiveRevision->bump();
         }
     }
 }

@@ -65,12 +65,17 @@ class ApiMobileGoogleAuthController extends AbstractController
     /** @return array<string, mixed> */
     private function serializeUser(User $user): array
     {
+        $stored = $user->getRoles();
+
         return [
             'id' => $user->getId(),
             'email' => $user->getEmail(),
             'username' => $user->getUsername(),
             'name' => $user->getName(),
             'roles' => $user->getRoles(),
+            'roleLabel' => (\in_array('ROLE_ADMIN', $stored, true) || \in_array('ROLE_STAFF', $stored, true))
+                ? $user->getPrimaryRoleLabel()
+                : 'User',
             'isVerified' => $user->isVerified(),
         ];
     }

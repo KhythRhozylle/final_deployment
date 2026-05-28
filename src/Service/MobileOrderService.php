@@ -47,6 +47,7 @@ class MobileOrderService
         private ProductRepository $productRepository,
         private SluggerInterface $slugger,
         private string $projectDir,
+        private OrderLiveRevisionService $orderLiveRevision,
     ) {}
 
     /**
@@ -141,6 +142,7 @@ class MobileOrderService
         }
 
         $this->entityManager->flush();
+        $this->orderLiveRevision->bump();
 
         return [
             'orderGroupId' => $orderGroupId,
@@ -262,6 +264,7 @@ class MobileOrderService
         }
 
         $this->entityManager->flush();
+        $this->orderLiveRevision->bump();
 
         return [
             'orderGroupId' => $orderGroupId,
