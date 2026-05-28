@@ -38,10 +38,12 @@
                             <td style="padding: 12px;">{{ user.email }}</td>
                             <td style="padding: 12px;">{{ user.name }}</td>
                             <td style="padding: 12px;">
+                                {% set roleLabel = user.primaryRoleLabel %}
                                 <span style="padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;
-                                    {% if 'ROLE_ADMIN' in user.roles %}background: #f8d7da; color: #721c24;
-                                    {% else %}background: #d1ecf1; color: #0c5460;{% endif %}">
-                                    {% if 'ROLE_ADMIN' in user.roles %}Admin{% else %}Staff{% endif %}
+                                    {% if roleLabel == 'Admin' %}background: #f8d7da; color: #721c24;
+                                    {% elseif roleLabel == 'Staff' %}background: #d1ecf1; color: #0c5460;
+                                    {% else %}background: #e8f5e9; color: #2e7d32;{% endif %}">
+                                    {{ roleLabel }}
                                 </span>
                             </td>
                             <td style="padding: 12px;">

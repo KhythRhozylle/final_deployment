@@ -231,6 +231,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->hasRole('ROLE_STAFF');
     }
 
+    /** Human-readable role for admin UI (mobile customers = User). */
+    public function getPrimaryRoleLabel(): string
+    {
+        $stored = $this->roles;
+
+        if (\in_array('ROLE_ADMIN', $stored, true)) {
+            return 'Admin';
+        }
+
+        if (\in_array('ROLE_STAFF', $stored, true)) {
+            return 'Staff';
+        }
+
+        return 'User';
+    }
+
     public function isVerified(): ?bool
     {
         return $this->isVerified;

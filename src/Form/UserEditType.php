@@ -48,6 +48,7 @@ class UserEditType extends AbstractType
                 'choices' => [
                     'Admin' => 'ROLE_ADMIN',
                     'Staff' => 'ROLE_STAFF',
+                    'User' => 'ROLE_USER',
                 ],
                 'multiple' => false,
                 'expanded' => false,

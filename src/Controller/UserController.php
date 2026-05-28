@@ -47,15 +47,12 @@ class UserController extends AbstractController
             $plainPassword = $form->get('password')->getData();
             $isActive = $form->get('isActive')->getData();
             
-            // Roles are now handled by the data transformer, so user->getRoles() should work
-            // But we need to ensure it's set correctly
-            $roles = $user->getRoles();
-            // Remove ROLE_USER if present (it's auto-added)
-            $roles = array_filter($roles, fn($r) => $r !== 'ROLE_USER');
-            if (empty($roles)) {
-                $user->setRoles(['ROLE_STAFF']);
-            }
-            
+            $storedRoles = array_values(array_filter(
+                $user->getRoles(),
+                static fn (string $role): bool => $role !== 'ROLE_USER',
+            ));
+            $user->setRoles($storedRoles);
+
             // Check if email already exists
             $existingUser = $userRepository->findOneBy(['email' => $user->getEmail()]);
             if ($existingUser) {
@@ -180,13 +177,11 @@ class UserController extends AbstractController
                 $user->setPassword($hashedPassword);
             }
 
-            // Roles are now handled by the data transformer automatically
-            // Just ensure roles are set correctly
-            $roles = $user->getRoles();
-            $roles = array_filter($roles, fn($r) => $r !== 'ROLE_USER');
-            if (empty($roles)) {
-                $user->setRoles(['ROLE_STAFF']);
-            }
+            $storedRoles = array_values(array_filter(
+                $user->getRoles(),
+                static fn (string $role): bool => $role !== 'ROLE_USER',
+            ));
+            $user->setRoles($storedRoles);
 
             $entityManager->flush();
 

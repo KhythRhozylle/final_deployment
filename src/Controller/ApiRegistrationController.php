@@ -60,6 +60,7 @@ class ApiRegistrationController extends AbstractController
         $user->setUsername($data['username']);
         $user->setName($data['name']);
         $user->setPassword($this->passwordHasher->hashPassword($user, $data['password']));
+        $user->setRoles([]);
         $user->setIsVerified(true);
         $user->setVerificationToken(null);
 

@@ -19,8 +19,11 @@ class RolesToStringTransformer implements DataTransformerInterface
         // Remove ROLE_USER as it's automatically added
         $roles = array_filter($roles, fn($r) => $r !== 'ROLE_USER');
         
-        // Return the first role or null
-        return !empty($roles) ? array_values($roles)[0] : null;
+        if (empty($roles)) {
+            return 'ROLE_USER';
+        }
+
+        return array_values($roles)[0];
     }
 
     /**
@@ -28,8 +31,8 @@ class RolesToStringTransformer implements DataTransformerInterface
      */
     public function reverseTransform($value): array
     {
-        if (null === $value || $value === '') {
-            return ['ROLE_STAFF'];
+        if (null === $value || $value === '' || $value === 'ROLE_USER') {
+            return [];
         }
 
         if (!is_string($value)) {
