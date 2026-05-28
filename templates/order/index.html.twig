@@ -253,6 +253,36 @@
         color: #0277BD;
     }
 
+    .payment-badge {
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: capitalize;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .payment-badge.paid {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .payment-badge.pending_verification {
+        background: #FFF3E0;
+        color: #E65100;
+    }
+
+    .payment-badge.unpaid {
+        background: #FFEBEE;
+        color: #C62828;
+    }
+
+    .payment-badge.cash_on_delivery {
+        background: #E3F2FD;
+        color: #1565C0;
+    }
+
     .mobile-pending-panel {
         background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
         border: 1px solid #FFE082;
@@ -344,6 +374,50 @@
     .btn-edit:hover {
         background: #FFE0B2;
         transform: translateY(-1px);
+    }
+
+    .status-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .status-actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .btn-status {
+        padding: 4px 10px;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-status-accept {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    .btn-status-accept:hover {
+        background: #C8E6C9;
+    }
+
+    .btn-status-cancel {
+        background: #FFEBEE;
+        color: #C62828;
+    }
+
+    .btn-status-cancel:hover {
+        background: #FFCDD2;
     }
 
     /* DataTables Pagination */
@@ -499,6 +573,7 @@
                         <th>Quantity</th>
                         <th>Price</th>
                         <th>Status</th>
+                        <th>Payment</th>
                         <th>Date</th>
                         <th>Actions</th>
                     </tr>
@@ -515,6 +590,8 @@
                         <td>
                             {% if order.source == 'mobile' %}
                                 <span class="source-badge">Mobile</span>
+                            {% elseif order.source == 'web' %}
+                                <span class="source-badge" style="background:#E8F5E9;color:#2E7D32;">Web</span>
                             {% else %}
                                 <span style="font-size:0.75rem;color:#999;">Staff</span>
                             {% endif %}
@@ -524,8 +601,32 @@
                         <td>{{ order.quantity }}</td>
                         <td><span class="price">₱{{ order.price|number_format(2) }}</span></td>
                         <td>
-                            <span class="status-badge {{ order.status|lower }}">
-                                {{ order.status }}
+                            <div class="status-cell">
+                                <span class="status-badge {{ order.status|lower }}">
+                                    {{ order.status }}
+                                </span>
+                                {% if is_granted('ROLE_ADMIN') and order.status|lower == 'pending' %}
+                                    <div class="status-actions">
+                                        <form method="post" action="{{ path('app_order_accept', { id: order.id }) }}" style="display:inline;">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('approve_order') }}">
+                                            <button type="submit" class="btn-status btn-status-accept" title="Accept order">
+                                                <i class="fas fa-check"></i> Accept
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{{ path('app_order_cancel', { id: order.id }) }}" style="display:inline;" onsubmit="return confirm('Cancel this order? The customer will see it as cancelled.');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('cancel_order') }}">
+                                            <button type="submit" class="btn-status btn-status-cancel" title="Cancel order">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% set paymentStatus = (order.paymentStatus ?? 'unpaid')|lower %}
+                            <span class="payment-badge {{ paymentStatus }}">
+                                {{ paymentStatus|replace({'_': ' '}) }}
                             </span>
                         </td>
                         <td data-order="{{ order.orderDate|date('Y-m-d') }}">{{ order.orderDate|date('M d, Y') }}</td>
@@ -581,7 +682,7 @@
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
                 order: [[0, 'desc']], // Sort by Order ID descending
                 columnDefs: [
-                    { orderable: false, targets: 8 }
+                    { orderable: false, targets: [6, 8] }
                 ],
                 language: {
                     search: "Search Orders:",

@@ -507,6 +507,30 @@
                 </div>
             </div>
 
+            <!-- Payment -->
+            <div class="detail-card">
+                <div class="card-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="card-label">Payment</div>
+                <div class="card-value">
+                    {% set paymentStatus = (order.paymentStatus ?? 'unpaid')|lower %}
+                    <span class="status-badge status-{{ paymentStatus == 'paid' ? 'completed' : 'pending' }}">
+                        {{ paymentStatus|replace({'_': ' '}) }}
+                    </span>
+                    {% if order.paymentMethod %}
+                        <div class="card-value secondary" style="font-size: 0.85rem; margin-top: 8px;">
+                            Method: {{ order.paymentMethod|replace({'_': ' '})|title }}
+                        </div>
+                    {% endif %}
+                    {% if order.referenceNumber %}
+                        <div class="card-value secondary" style="font-size: 0.85rem; margin-top: 4px;">
+                            Ref: {{ order.referenceNumber }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Order Date -->
             <div class="detail-card">
                 <div class="card-icon">

@@ -78,6 +78,22 @@ class Order
     #[Groups(['order:read'])]
     private ?\DateTime $orderDate = null;
 
+    #[ORM\Column(length: 32, nullable: true)]
+    #[Groups(['order:read', 'order:write'])]
+    private ?string $paymentMethod = null;
+
+    #[ORM\Column(length: 32, nullable: true)]
+    #[Groups(['order:read', 'order:write'])]
+    private ?string $paymentStatus = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['order:read', 'order:write'])]
+    private ?string $paymentProofPath = null;
+
+    #[ORM\Column(length: 128, nullable: true)]
+    #[Groups(['order:read', 'order:write'])]
+    private ?string $referenceNumber = null;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?User $createdBy = null;
@@ -220,6 +236,54 @@ class Order
     public function setOrderDate(\DateTime $orderDate): static
     {
         $this->orderDate = $orderDate;
+
+        return $this;
+    }
+
+    public function getPaymentMethod(): ?string
+    {
+        return $this->paymentMethod;
+    }
+
+    public function setPaymentMethod(?string $paymentMethod): static
+    {
+        $this->paymentMethod = $paymentMethod;
+
+        return $this;
+    }
+
+    public function getPaymentStatus(): ?string
+    {
+        return $this->paymentStatus;
+    }
+
+    public function setPaymentStatus(?string $paymentStatus): static
+    {
+        $this->paymentStatus = $paymentStatus;
+
+        return $this;
+    }
+
+    public function getPaymentProofPath(): ?string
+    {
+        return $this->paymentProofPath;
+    }
+
+    public function setPaymentProofPath(?string $paymentProofPath): static
+    {
+        $this->paymentProofPath = $paymentProofPath;
+
+        return $this;
+    }
+
+    public function getReferenceNumber(): ?string
+    {
+        return $this->referenceNumber;
+    }
+
+    public function setReferenceNumber(?string $referenceNumber): static
+    {
+        $this->referenceNumber = $referenceNumber;
 
         return $this;
     }

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Service\MobileOrderService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -82,6 +83,48 @@ class ApiMobileOrderController extends AbstractController
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate');
 
         return $response;
+    }
+
+    public function submitPayment(string $orderGroupId, Request $request): JsonResponse
+    {
+        $email = trim((string) $request->request->get('email', ''));
+        if ($email === '') {
+            return $this->jsonError('Email is required', Response::HTTP_BAD_REQUEST);
+        }
+
+        $method = trim((string) $request->request->get('payment_method', ''));
+        $reference = trim((string) $request->request->get('reference_number', ''));
+        /** @var UploadedFile|null $proof */
+        $proof = $request->files->get('payment_proof');
+
+        try {
+            $result = $this->mobileOrderService->submitGroupPayment(
+                $orderGroupId,
+                $email,
+                $method,
+                $reference !== '' ? $reference : null,
+                $proof instanceof UploadedFile ? $proof : null,
+            );
+        } catch (\InvalidArgumentException $e) {
+            $message = $e->getMessage();
+            $status = str_contains(strtolower($message), 'not found')
+                ? Response::HTTP_NOT_FOUND
+                : Response::HTTP_BAD_REQUEST;
+
+            return $this->jsonError($message, $status);
+        }
+
+        return new JsonResponse([
+            'status' => 'success',
+            'message' => $result['message'],
+            'data' => [
+                'orderGroupId' => $result['orderGroupId'],
+                'paymentMethod' => $result['paymentMethod'],
+                'paymentStatus' => $result['paymentStatus'],
+                'paymentProofPath' => $result['paymentProofPath'],
+                'referenceNumber' => $result['referenceNumber'],
+            ],
+        ], Response::HTTP_CREATED);
     }
 
     private function jsonError(string $message, int $status): JsonResponse

@@ -34,6 +34,10 @@ services:
             $appUrl: '%env(default:app.env_empty:APP_URL)%'
             $railwayPublicDomain: '%env(default:app.env_empty:RAILWAY_PUBLIC_DOMAIN)%'
 
+    App\Service\MobileOrderService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     App\Service\ShopInfoService:
         arguments:
             $shopName: '%florynn.shop.name%'

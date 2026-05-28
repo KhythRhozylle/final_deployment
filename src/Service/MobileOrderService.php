@@ -9,6 +9,8 @@ use App\Repository\CustomerRepository;
 use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Uid\Uuid;
 
 class MobileOrderService
@@ -19,6 +21,15 @@ class MobileOrderService
     public const STATUS_OUT_FOR_DELIVERY = 'out_for_delivery';
     public const STATUS_DELIVERED = 'delivered';
     public const STATUS_CANCELLED = 'cancelled';
+
+    public const PAYMENT_METHOD_GCASH = 'gcash';
+    public const PAYMENT_METHOD_BANK_TRANSFER = 'bank_transfer';
+    public const PAYMENT_METHOD_COD = 'cash_on_delivery';
+
+    public const PAYMENT_STATUS_UNPAID = 'unpaid';
+    public const PAYMENT_STATUS_PENDING_VERIFICATION = 'pending_verification';
+    public const PAYMENT_STATUS_PAID = 'paid';
+    public const PAYMENT_STATUS_COD = 'cash_on_delivery';
 
     public const MOBILE_STATUSES = [
         self::STATUS_PENDING,
@@ -34,6 +45,8 @@ class MobileOrderService
         private CustomerRepository $customerRepository,
         private OrderRepository $orderRepository,
         private ProductRepository $productRepository,
+        private SluggerInterface $slugger,
+        private string $projectDir,
     ) {}
 
     /**
@@ -60,10 +73,11 @@ class MobileOrderService
             throw new \InvalidArgumentException('All required customer fields must be provided.');
         }
 
-        $customer = $this->customerRepository->findOneBy(['email' => $email]);
+        $normalizedEmail = strtolower($email);
+        $customer = $this->customerRepository->findOneBy(['email' => $normalizedEmail]);
         if (!$customer) {
             $customer = new Customer();
-            $customer->setEmail(strtolower($email));
+            $customer->setEmail($normalizedEmail);
             $customer->setUsername($this->uniqueUsernameFromEmail($email));
         }
 
@@ -165,10 +179,102 @@ class MobileOrderService
     }
 
     /**
-     * @param list<Order> $orders
-     *
-     * @return list<array<string, mixed>>
+     * @return array{
+     *     orderGroupId: string,
+     *     paymentMethod: string,
+     *     paymentStatus: string,
+     *     paymentProofPath: string|null,
+     *     referenceNumber: string|null,
+     *     message: string
+     * }
      */
+    public function submitGroupPayment(
+        string $orderGroupId,
+        string $email,
+        string $method,
+        ?string $reference,
+        ?UploadedFile $proof,
+    ): array {
+        $email = strtolower(trim($email));
+        if ($email === '') {
+            throw new \InvalidArgumentException('Email is required');
+        }
+
+        $method = strtolower(trim($method));
+        if (!\in_array($method, [
+            self::PAYMENT_METHOD_GCASH,
+            self::PAYMENT_METHOD_BANK_TRANSFER,
+            self::PAYMENT_METHOD_COD,
+        ], true)) {
+            throw new \InvalidArgumentException('Invalid payment method');
+        }
+
+        $requiresProof = $method !== self::PAYMENT_METHOD_COD;
+        $reference = trim((string) $reference);
+
+        if ($requiresProof) {
+            if ($reference === '') {
+                throw new \InvalidArgumentException('Reference number is required');
+            }
+            if (!$proof instanceof UploadedFile) {
+                throw new \InvalidArgumentException('Payment proof image is required');
+            }
+
+            $mime = (string) $proof->getMimeType();
+            $allowed = ['image/jpeg', 'image/jpg', 'image/png'];
+            if ($mime === '' || !\in_array($mime, $allowed, true)) {
+                throw new \InvalidArgumentException('Payment proof must be a JPG or PNG image');
+            }
+        }
+
+        $orders = $this->orderRepository->findByGroupIdAndEmail($orderGroupId, $email);
+        if ($orders === []) {
+            throw new \InvalidArgumentException('Order not found for this account');
+        }
+
+        $proofPath = null;
+        if ($requiresProof && $proof instanceof UploadedFile) {
+            $safeBase = $this->slugger->slug(pathinfo($proof->getClientOriginalName() ?: 'payment-proof', PATHINFO_FILENAME));
+            $ext = strtolower($proof->guessExtension() ?: 'jpg');
+            if (!\in_array($ext, ['jpg', 'jpeg', 'png'], true)) {
+                $ext = 'jpg';
+            }
+            $fileName = sprintf('order-%s-%s.%s', $orderGroupId, bin2hex(random_bytes(6)), $ext);
+
+            $targetDir = $this->projectDir . '/public/uploads/payments';
+            if (!is_dir($targetDir)) {
+                @mkdir($targetDir, 0775, true);
+            }
+
+            $proof->move($targetDir, $fileName);
+            $proofPath = '/uploads/payments/' . $fileName;
+        }
+
+        $paymentStatus = $requiresProof
+            ? self::PAYMENT_STATUS_PENDING_VERIFICATION
+            : self::PAYMENT_STATUS_COD;
+
+        foreach ($orders as $order) {
+            $order->setPaymentMethod($method);
+            $order->setReferenceNumber($requiresProof ? $reference : null);
+            $order->setPaymentProofPath($requiresProof ? $proofPath : null);
+            $order->setPaymentStatus($paymentStatus);
+        }
+
+        $this->entityManager->flush();
+
+        return [
+            'orderGroupId' => $orderGroupId,
+            'paymentMethod' => $method,
+            'paymentStatus' => $paymentStatus,
+            'paymentProofPath' => $proofPath,
+            'referenceNumber' => $requiresProof ? $reference : null,
+            'message' => $requiresProof
+                ? 'Payment successful. Your payment is now pending verification.'
+                : 'Payment successful. Cash on Delivery has been recorded.',
+        ];
+    }
+
     /**
      * @param list<Order> $orders
      */
@@ -247,6 +353,10 @@ class MobileOrderService
                 'orderDate' => $first->getOrderDate()?->format(\DateTimeInterface::ATOM),
                 'source' => $first->getSource(),
                 'notes' => $first->getNotes(),
+                'paymentMethod' => $first->getPaymentMethod(),
+                'paymentStatus' => $first->getPaymentStatus(),
+                'paymentProofPath' => $first->getPaymentProofPath(),
+                'referenceNumber' => $first->getReferenceNumber(),
                 'total' => 0.0,
                 'items' => [],
                 'customer' => $customer ? [

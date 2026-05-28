@@ -38,15 +38,22 @@ class OrderRepository extends ServiceEntityRepository
      */
     public function findByGroupIdAndEmail(string $orderGroupId, string $email): array
     {
-        return $this->createQueryBuilder('o')
-            ->innerJoin('o.customer', 'c')
-            ->andWhere('o.orderGroupId = :gid')
-            ->andWhere('LOWER(c.email) = LOWER(:email)')
-            ->setParameter('gid', $orderGroupId)
-            ->setParameter('email', trim($email))
-            ->orderBy('o.id', 'ASC')
-            ->getQuery()
-            ->getResult();
+        $orders = $this->findByOrderGroupId($orderGroupId);
+        if ($orders === []) {
+            return [];
+        }
+
+        $normalizedEmail = strtolower(trim($email));
+        $customer = $orders[0]->getCustomer();
+        if ($customer === null) {
+            return [];
+        }
+
+        if (strtolower(trim((string) $customer->getEmail())) !== $normalizedEmail) {
+            return [];
+        }
+
+        return $orders;
     }
 
     /**
