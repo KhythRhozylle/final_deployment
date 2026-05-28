@@ -47,7 +47,7 @@
                 {{ paymentStatus|replace({'_': ' '}) }}
             </span>
         </td>
-        <td data-order="{{ order.orderDate|date('Y-m-d') }}">{{ order.orderDate|date('M d, Y') }}</td>
+        <td data-order="{{ order.orderDate|date('Y-m-d H:i:s') }}">{{ order.orderDate|date('M d, Y') }}</td>
         <td>
             <div class="action-buttons">
                 {% if order.source == 'mobile' and order.orderGroupId and order.status == 'pending' and is_granted('ROLE_ADMIN') %}

@@ -619,8 +619,11 @@
                     responsive: true,
                     pageLength: 10,
                     lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
-                    order: [[0, 'desc']],
-                    columnDefs: [{ orderable: false, targets: [8] }],
+                    order: [[7, 'desc'], [0, 'desc']],
+                    columnDefs: [
+                        { orderable: false, targets: [8] },
+                        { type: 'date', targets: [7] },
+                    ],
                     language: {
                         search: 'Search Orders:',
                         lengthMenu: 'Show _MENU_ orders',
@@ -663,7 +666,11 @@
                 const nextPending = payload.pendingMobileCount || 0;
                 document.body.dataset.pendingMobile = String(nextPending);
 
-                if (nextPending > prevPending) {
+                const prevCount = parseInt(document.body.dataset.orderCount || '0', 10);
+                const nextCount = payload.orderCount ?? prevCount;
+                document.body.dataset.orderCount = String(nextCount);
+
+                if (nextPending > prevPending || nextCount > prevCount) {
                     showLiveToast('New mobile order — review pending approval');
                 } else {
                     showLiveToast('Orders updated');
@@ -688,8 +695,10 @@
 
             $(document).ready(function () {
                 document.body.dataset.pendingMobile = '{{ pendingMobileGroups|length }}';
+                document.body.dataset.orderCount = '{{ orders|length }}';
                 initOrdersDataTable();
-                setInterval(pollOrdersLive, 4000);
+                pollOrdersLive();
+                setInterval(pollOrdersLive, 3000);
                 document.addEventListener('visibilitychange', function () {
                     if (!document.hidden) pollOrdersLive();
                 });

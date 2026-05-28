@@ -64,11 +64,9 @@ final class OrderController extends AbstractController
         OrderRepository $orderRepository,
         OrderApprovalService $orderApprovalService,
     ): array {
-        if ($this->isGranted('ROLE_ADMIN')) {
-            $orders = $orderRepository->findAll();
-        } else {
-            $orders = $orderRepository->findBy(['createdBy' => $this->getUser()]);
-        }
+        $orders = $this->isGranted('ROLE_ADMIN')
+            ? $orderRepository->findForAdminListing()
+            : $orderRepository->findForAdminListing($this->getUser());
 
         $pendingMobileGroups = [];
         if ($this->isGranted('ROLE_ADMIN')) {

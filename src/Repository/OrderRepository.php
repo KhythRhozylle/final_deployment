@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Order;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -80,17 +81,68 @@ class OrderRepository extends ServiceEntityRepository
     public function findPendingMobileGroupIds(): array
     {
         $rows = $this->createQueryBuilder('o')
-            ->select('DISTINCT o.orderGroupId')
+            ->select('o.orderGroupId AS gid')
+            ->addSelect('MAX(o.orderDate) AS HIDDEN maxDate')
             ->andWhere('o.source = :source')
             ->andWhere('o.status = :status')
             ->andWhere('o.orderGroupId IS NOT NULL')
             ->setParameter('source', 'mobile')
             ->setParameter('status', 'pending')
-            ->orderBy('o.orderGroupId', 'DESC')
+            ->groupBy('o.orderGroupId')
+            ->orderBy('maxDate', 'DESC')
+            ->addOrderBy('o.orderGroupId', 'DESC')
             ->getQuery()
-            ->getSingleColumnResult();
+            ->getScalarResult();
 
-        return array_values(array_filter($rows));
+        return array_values(array_filter(array_column($rows, 'gid')));
+    }
+
+    /**
+     * Admin orders table: newest first (date, then id).
+     *
+     * @return list<Order>
+     */
+    public function findForAdminListing(?User $staff = null): array
+    {
+        $qb = $this->createQueryBuilder('o')
+            ->leftJoin('o.customer', 'c')
+            ->addSelect('c')
+            ->orderBy('o.orderDate', 'DESC')
+            ->addOrderBy('o.id', 'DESC');
+
+        if ($staff instanceof User) {
+            $qb->andWhere('o.createdBy = :staff')
+                ->setParameter('staff', $staff);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Changes whenever rows are added/updated (used for admin live polling).
+     */
+    public function computeLiveRevision(): int
+    {
+        $sql = <<<'SQL'
+            SELECT
+                COUNT(*) AS cnt,
+                COALESCE(MAX(id), 0) AS max_id,
+                COALESCE(UNIX_TIMESTAMP(MAX(order_date)), 0) AS max_ts,
+                COALESCE(SUM(CRC32(CONCAT(
+                    id, '|', status, '|', COALESCE(payment_status, ''), '|', COALESCE(order_group_id, '')
+                ))), 0) AS state_sum
+            FROM `order`
+            SQL;
+
+        $row = $this->getEntityManager()->getConnection()->fetchAssociative($sql);
+
+        return crc32(sprintf(
+            '%s:%s:%s:%s',
+            $row['cnt'] ?? 0,
+            $row['max_id'] ?? 0,
+            $row['max_ts'] ?? 0,
+            $row['state_sum'] ?? 0,
+        )) & 0x7FFFFFFF;
     }
 
     public function getTotalRevenue(): float

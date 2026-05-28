@@ -2,31 +2,24 @@
 
 namespace App\Service;
 
-use Psr\Cache\CacheItemPoolInterface;
+use App\Repository\OrderRepository;
 
 /**
- * Increments when orders change (mobile checkout, payment, admin status).
- * Admin UI polls this to refresh without manual page reload.
+ * Revision token for admin order live polling (derived from DB — reliable on Railway).
  */
 final class OrderLiveRevisionService
 {
-    private const CACHE_KEY = 'admin.orders.live_revision';
-
     public function __construct(
-        private readonly CacheItemPoolInterface $cache,
+        private readonly OrderRepository $orderRepository,
     ) {}
 
     public function current(): int
     {
-        $item = $this->cache->getItem(self::CACHE_KEY);
-
-        return $item->isHit() ? (int) $item->get() : 0;
+        return $this->orderRepository->computeLiveRevision();
     }
 
     public function bump(): void
     {
-        $item = $this->cache->getItem(self::CACHE_KEY);
-        $item->set($this->current() + 1);
-        $this->cache->save($item);
+        // No-op: {@see computeLiveRevision()} reads current order state from the database.
     }
 }
