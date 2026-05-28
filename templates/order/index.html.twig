@@ -570,7 +570,6 @@
                         <th>Source</th>
                         <th>Customer</th>
                         <th>Product</th>
-                        <th>Quantity</th>
                         <th>Price</th>
                         <th>Status</th>
                         <th>Payment</th>
@@ -598,7 +597,6 @@
                         </td>
                         <td>{% if order.customer is not null and order.customer.id is defined and order.customer.id != 0 %}{{ order.customer.name }}{% else %}N/A{% endif %}</td>
                         <td>{{ order.productName }}</td>
-                        <td>{{ order.quantity }}</td>
                         <td><span class="price">₱{{ order.price|number_format(2) }}</span></td>
                         <td>
                             <div class="status-cell">
@@ -682,7 +680,7 @@
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
                 order: [[0, 'desc']], // Sort by Order ID descending
                 columnDefs: [
-                    { orderable: false, targets: [9] }
+                    { orderable: false, targets: [8] }
                 ],
                 language: {
                     search: "Search Orders:",
