@@ -42,10 +42,7 @@
             </div>
         </td>
         <td>
-            {% set paymentStatus = (order.paymentStatus ?? 'unpaid')|lower %}
-            <span class="payment-badge {{ paymentStatus }}">
-                {{ paymentStatus|replace({'_': ' '}) }}
-            </span>
+            {% include 'order/_payment_badge.html.twig' %}
         </td>
         <td data-order="{{ order.orderDate|date('Y-m-d H:i:s') }}">{{ order.orderDate|date('M d, Y') }}</td>
         <td>

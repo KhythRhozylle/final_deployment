@@ -135,6 +135,7 @@ class MobileOrderService
             $order->setSource('mobile');
             $order->setProductId($resolvedProductId);
             $order->setStockDeducted(false);
+            $order->setPaymentStatus(self::PAYMENT_STATUS_UNPAID);
             $order->setOrderDate(new \DateTime());
 
             $this->entityManager->persist($order);
@@ -190,6 +191,30 @@ class MobileOrderService
      *     message: string
      * }
      */
+    /**
+     * Admin confirms payment (e.g. legacy pending_verification rows).
+     */
+    public function markGroupPaymentPaid(string $orderGroupId, string $email): int
+    {
+        $email = strtolower(trim($email));
+        $orders = $this->orderRepository->findByGroupIdAndEmail($orderGroupId, $email);
+        if ($orders === []) {
+            $orders = $this->orderRepository->findByOrderGroupId($orderGroupId);
+        }
+        if ($orders === []) {
+            throw new \InvalidArgumentException('Order not found.');
+        }
+
+        foreach ($orders as $order) {
+            $order->setPaymentStatus(self::PAYMENT_STATUS_PAID);
+        }
+
+        $this->entityManager->flush();
+        $this->orderLiveRevision->bump();
+
+        return count($orders);
+    }
+
     public function submitGroupPayment(
         string $orderGroupId,
         string $email,
@@ -252,9 +277,7 @@ class MobileOrderService
             $proofPath = '/uploads/payments/' . $fileName;
         }
 
-        $paymentStatus = $requiresProof
-            ? self::PAYMENT_STATUS_PENDING_VERIFICATION
-            : self::PAYMENT_STATUS_COD;
+        $paymentStatus = self::PAYMENT_STATUS_PAID;
 
         foreach ($orders as $order) {
             $order->setPaymentMethod($method);
@@ -273,8 +296,8 @@ class MobileOrderService
             'paymentProofPath' => $proofPath,
             'referenceNumber' => $requiresProof ? $reference : null,
             'message' => $requiresProof
-                ? 'Payment successful. Your payment is now pending verification.'
-                : 'Payment successful. Cash on Delivery has been recorded.',
+                ? 'Payment successful. Your payment has been recorded as paid.'
+                : 'Payment successful. Cash on Delivery has been recorded as paid.',
         ];
     }
 

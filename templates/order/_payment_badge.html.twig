@@ -1,0 +1,15 @@
+{# Payment column badge — maps DB values to admin-friendly labels #}
+{% set raw = (order.paymentStatus ?? 'unpaid')|lower|trim %}
+{% set label = 'Unpaid' %}
+{% set badge = 'unpaid' %}
+{% if raw == 'paid' %}
+    {% set label = 'Paid' %}
+    {% set badge = 'paid' %}
+{% elseif raw in ['cash_on_delivery', 'cod', 'cash on delivery'] %}
+    {% set label = 'Paid' %}
+    {% set badge = 'paid' %}
+{% elseif raw in ['pending_verification', 'pending verification', 'under_review', 'under review'] %}
+    {% set label = 'Pending verification' %}
+    {% set badge = 'pending_verification' %}
+{% endif %}
+<span class="payment-badge {{ badge }}">{{ label }}</span>

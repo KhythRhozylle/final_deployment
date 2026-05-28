@@ -107,6 +107,38 @@
     </div>
 
     <div class="card">
+        <h2>Payment</h2>
+        <div class="detail-grid">
+            <p>
+                <strong>Status:</strong>
+                {% set paymentOrder = { paymentStatus: summary.paymentStatus } %}
+                {% include 'order/_payment_badge.html.twig' with { order: paymentOrder } %}
+            </p>
+            {% if summary.paymentMethod %}
+                <p><strong>Method:</strong> {{ summary.paymentMethod|replace({'_': ' '})|title }}</p>
+            {% endif %}
+            {% if summary.referenceNumber %}
+                <p><strong>Reference:</strong> {{ summary.referenceNumber }}</p>
+            {% endif %}
+            {% if summary.paymentProofPath %}
+                <p>
+                    <strong>Proof:</strong>
+                    <a href="{{ summary.paymentProofPath }}" target="_blank" rel="noopener">View payment proof</a>
+                </p>
+            {% endif %}
+        </div>
+        {% set paymentRaw = (summary.paymentStatus ?? 'unpaid')|lower %}
+        {% if paymentRaw not in ['paid', 'cash_on_delivery', 'cod'] %}
+            <form method="post" action="{{ path('app_order_group_mark_paid', { orderGroupId: summary.orderGroupId }) }}" style="margin-top:14px;">
+                <input type="hidden" name="_token" value="{{ csrf_token('mark_order_paid') }}">
+                <button type="submit" class="btn-approve" onclick="return confirm('Mark this order group as paid?');">
+                    <i class="fas fa-money-check-alt"></i> Mark payment as paid
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="card">
         <h2>Admin decision</h2>
         <p style="color:#666; margin-bottom:16px;">
             <strong>Confirm & approve</strong> deducts stock and sets status to <em>Confirmed</em> (customer app updates).

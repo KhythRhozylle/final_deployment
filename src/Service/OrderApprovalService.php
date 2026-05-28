@@ -169,6 +169,10 @@ class OrderApprovalService
             'total' => round($total, 2),
             'canApprove' => $canApprove && $first->getStatus() === MobileOrderService::STATUS_PENDING,
             'issues' => $issues,
+            'paymentStatus' => $first->getPaymentStatus(),
+            'paymentMethod' => $first->getPaymentMethod(),
+            'paymentProofPath' => $first->getPaymentProofPath(),
+            'referenceNumber' => $first->getReferenceNumber(),
             'lines' => $lines,
             'customer' => $customer ? [
                 'name' => $customer->getName(),

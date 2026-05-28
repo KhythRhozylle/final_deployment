@@ -7,6 +7,7 @@ use App\Form\OrderType;
 use App\Repository\ProductRepository;
 use App\Repository\OrderRepository;
 use App\Service\ActivityLogService;
+use App\Service\MobileOrderService;
 use App\Service\OrderApprovalService;
 use App\Service\OrderLiveRevisionService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -123,6 +124,38 @@ final class OrderController extends AbstractController
                 'lines' => (string) $count,
             ]);
             $this->addFlash('success', sprintf('Order approved and confirmed (%d item(s)). Stock has been reserved.', $count));
+        } catch (\InvalidArgumentException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_order_index');
+    }
+
+    #[Route('/mobile/{orderGroupId}/mark-paid', name: 'app_order_group_mark_paid', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function markMobileGroupPaid(
+        string $orderGroupId,
+        Request $request,
+        MobileOrderService $mobileOrderService,
+        OrderApprovalService $orderApprovalService,
+        ActivityLogService $logService,
+    ): Response {
+        if (!$this->isCsrfTokenValid('mark_order_paid', $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Invalid security token. Please try again.');
+
+            return $this->redirectToRoute('app_order_group_review', ['orderGroupId' => $orderGroupId]);
+        }
+
+        try {
+            $summary = $orderApprovalService->buildGroupSummary($orderGroupId);
+            $email = (string) ($summary['customer']['email'] ?? '');
+            $count = $mobileOrderService->markGroupPaymentPaid($orderGroupId, $email);
+            $logService->logUpdate($this->getUser(), 'OrderGroup', 0, [
+                'orderGroupId' => $orderGroupId,
+                'action' => 'payment_marked_paid',
+                'lines' => (string) $count,
+            ]);
+            $this->addFlash('success', 'Payment marked as paid. The orders table will update automatically.');
         } catch (\InvalidArgumentException $e) {
             $this->addFlash('error', $e->getMessage());
         }
