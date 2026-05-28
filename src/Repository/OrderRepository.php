@@ -111,25 +111,10 @@ class OrderRepository extends ServiceEntityRepository
         $since = new \DateTimeImmutable(sprintf('-%d days', max(1, $days - 1)));
         $since = $since->setTime(0, 0, 0);
 
-        $rows = $this->createQueryBuilder('o')
-            ->select('DATE(o.orderDate) AS dayKey')
-            ->addSelect('COALESCE(SUM(o.price * o.quantity), 0) AS total')
-            ->andWhere('o.orderDate >= :since')
-            ->andWhere('LOWER(o.status) NOT IN (:excluded)')
-            ->setParameter('since', $since)
-            ->setParameter('excluded', ['cancelled', 'rejected'])
-            ->groupBy('dayKey')
-            ->orderBy('dayKey', 'ASC')
-            ->getQuery()
-            ->getArrayResult();
-
-        $byDay = [];
-        foreach ($rows as $row) {
-            $key = (string) ($row['dayKey'] ?? '');
-            if ($key !== '') {
-                $byDay[$key] = (float) ($row['total'] ?? 0);
-            }
-        }
+        $byDay = $this->sumRevenueGroupedBy(
+            $since,
+            static fn (\DateTimeInterface $date): string => $date->format('Y-m-d'),
+        );
 
         $result = [];
         for ($i = 0; $i < $days; ++$i) {
@@ -152,25 +137,10 @@ class OrderRepository extends ServiceEntityRepository
         $since = new \DateTimeImmutable('first day of this month');
         $since = $since->modify(sprintf('-%d months', max(0, $months - 1)))->setTime(0, 0, 0);
 
-        $rows = $this->createQueryBuilder('o')
-            ->select("DATE_FORMAT(o.orderDate, '%Y-%m') AS monthKey")
-            ->addSelect('COALESCE(SUM(o.price * o.quantity), 0) AS total')
-            ->andWhere('o.orderDate >= :since')
-            ->andWhere('LOWER(o.status) NOT IN (:excluded)')
-            ->setParameter('since', $since)
-            ->setParameter('excluded', ['cancelled', 'rejected'])
-            ->groupBy('monthKey')
-            ->orderBy('monthKey', 'ASC')
-            ->getQuery()
-            ->getArrayResult();
-
-        $byMonth = [];
-        foreach ($rows as $row) {
-            $key = (string) ($row['monthKey'] ?? '');
-            if ($key !== '') {
-                $byMonth[$key] = (float) ($row['total'] ?? 0);
-            }
-        }
+        $byMonth = $this->sumRevenueGroupedBy(
+            $since,
+            static fn (\DateTimeInterface $date): string => $date->format('Y-m'),
+        );
 
         $result = [];
         for ($i = 0; $i < $months; ++$i) {
@@ -183,6 +153,36 @@ class OrderRepository extends ServiceEntityRepository
         }
 
         return $result;
+    }
+
+    /**
+     * @param callable(\DateTimeInterface): string $bucketKey
+     *
+     * @return array<string, float>
+     */
+    private function sumRevenueGroupedBy(\DateTimeImmutable $since, callable $bucketKey): array
+    {
+        $orders = $this->createQueryBuilder('o')
+            ->andWhere('o.orderDate >= :since')
+            ->andWhere('LOWER(o.status) NOT IN (:excluded)')
+            ->setParameter('since', $since)
+            ->setParameter('excluded', ['cancelled', 'rejected'])
+            ->getQuery()
+            ->getResult();
+
+        $totals = [];
+        foreach ($orders as $order) {
+            $orderDate = $order->getOrderDate();
+            if (!$orderDate instanceof \DateTimeInterface) {
+                continue;
+            }
+
+            $key = $bucketKey($orderDate);
+            $lineTotal = (float) $order->getPrice() * (float) $order->getQuantity();
+            $totals[$key] = ($totals[$key] ?? 0.0) + $lineTotal;
+        }
+
+        return $totals;
     }
 
     public function countByStatus(string $status): int
