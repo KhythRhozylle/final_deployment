@@ -85,6 +85,7 @@ class ApiMobileOrderController extends AbstractController
         return $response;
     }
 
+    #[Route('/api/mobile/orders/{orderGroupId}/payment', name: 'api_mobile_orders_submit_payment', methods: ['POST'])]
     public function submitPayment(string $orderGroupId, Request $request): JsonResponse
     {
         $email = trim((string) $request->request->get('email', ''));

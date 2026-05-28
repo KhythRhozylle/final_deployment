@@ -1,4 +1,0 @@
-api_mobile_orders_payment:
-    path: /api/mobile/orders/{orderGroupId}/payment
-    controller: App\Controller\ApiMobileOrderController::submitPayment
-    methods: [POST]
