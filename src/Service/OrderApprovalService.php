@@ -58,6 +58,44 @@ class OrderApprovalService
     }
 
     /**
+     * Accept an order line, or the whole group when orderGroupId is set.
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function acceptOrder(Order $order, ?User $admin = null): int
+    {
+        if ($order->getOrderGroupId()) {
+            return $this->approveGroup($order->getOrderGroupId(), $admin);
+        }
+
+        $result = $this->approveOrdersInternal([$order], $admin);
+        if (!$result['approved']) {
+            throw new \InvalidArgumentException($result['message']);
+        }
+
+        return $result['lineCount'];
+    }
+
+    /**
+     * Cancel an order line, or the whole group when orderGroupId is set.
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function cancelOrder(Order $order): int
+    {
+        if ($order->getOrderGroupId()) {
+            return $this->rejectGroup($order->getOrderGroupId());
+        }
+
+        $result = $this->rejectOrdersInternal([$order]);
+        if (!$result['rejected']) {
+            throw new \InvalidArgumentException($result['message']);
+        }
+
+        return $result['lineCount'];
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function listPendingMobileGroups(): array
@@ -165,6 +203,31 @@ class OrderApprovalService
             ];
         }
 
+        $result = $this->approveOrdersInternal($orders, $admin);
+        if (!$result['approved']) {
+            return $result;
+        }
+
+        $this->syncMobileGroupStatus($orderGroupId, MobileOrderService::STATUS_CONFIRMED);
+
+        return $result;
+    }
+
+    /**
+     * @param list<Order> $orders
+     *
+     * @return array{approved: bool, message: string, lineCount: int}
+     */
+    private function approveOrdersInternal(array $orders, ?User $admin = null): array
+    {
+        if ($orders === []) {
+            return ['approved' => false, 'message' => 'Order not found.', 'lineCount' => 0];
+        }
+
+        if ($orders[0]->getStatus() !== MobileOrderService::STATUS_PENDING) {
+            return ['approved' => false, 'message' => 'Only pending orders can be approved.', 'lineCount' => 0];
+        }
+
         foreach ($orders as $order) {
             $product = $this->findProductForOrder($order);
             if (!$product instanceof Product) {
@@ -201,7 +264,6 @@ class OrderApprovalService
             $this->entityManager->persist($order);
         }
 
-        $this->syncMobileGroupStatus($orderGroupId, MobileOrderService::STATUS_CONFIRMED);
         $this->entityManager->flush();
 
         return [
@@ -225,6 +287,31 @@ class OrderApprovalService
             return ['rejected' => false, 'message' => 'Only pending orders can be rejected.', 'lineCount' => 0];
         }
 
+        $result = $this->rejectOrdersInternal($orders);
+        if (!$result['rejected']) {
+            return $result;
+        }
+
+        $this->syncMobileGroupStatus($orderGroupId, MobileOrderService::STATUS_CANCELLED);
+
+        return $result;
+    }
+
+    /**
+     * @param list<Order> $orders
+     *
+     * @return array{rejected: bool, message: string, lineCount: int}
+     */
+    private function rejectOrdersInternal(array $orders): array
+    {
+        if ($orders === []) {
+            return ['rejected' => false, 'message' => 'Order not found.', 'lineCount' => 0];
+        }
+
+        if ($orders[0]->getStatus() !== MobileOrderService::STATUS_PENDING) {
+            return ['rejected' => false, 'message' => 'Only pending orders can be rejected.', 'lineCount' => 0];
+        }
+
         foreach ($orders as $order) {
             if ($order->isStockDeducted()) {
                 $product = $this->findProductForOrder($order);
@@ -238,7 +325,6 @@ class OrderApprovalService
             $this->entityManager->persist($order);
         }
 
-        $this->syncMobileGroupStatus($orderGroupId, MobileOrderService::STATUS_CANCELLED);
         $this->entityManager->flush();
 
         return [

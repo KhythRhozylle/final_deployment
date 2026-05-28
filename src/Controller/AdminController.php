@@ -8,6 +8,7 @@ use App\Entity\Order;
 use App\Entity\Product;
 use App\Entity\User;
 use App\Repository\ActivityLogRepository;
+use App\Repository\OrderRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,9 +24,9 @@ class AdminController extends AbstractController
     public function dashboard(
         EntityManagerInterface $em,
         UserRepository $userRepository,
-        ActivityLogRepository $logRepository
+        ActivityLogRepository $logRepository,
+        OrderRepository $orderRepository,
     ): Response {
-        // Get totals
         $totalUsers = $userRepository->count([]);
         $totalStaff = $userRepository->countByRole('ROLE_STAFF');
         $totalProducts = $em->getRepository(Product::class)->count([]);
@@ -33,8 +34,10 @@ class AdminController extends AbstractController
         $totalOrders = $em->getRepository(Order::class)->count([]);
         $totalCustomers = $em->getRepository(Customer::class)->count([]);
         $totalRecords = $totalProducts + $totalCategories + $totalOrders + $totalCustomers;
+        $totalRevenue = $orderRepository->getTotalRevenue();
+        $dailyRevenue = $orderRepository->getDailyRevenue(7);
+        $monthlyRevenue = $orderRepository->getMonthlyRevenue(6);
 
-        // Get recent activities
         $recentActivities = $logRepository->findRecent(10);
 
         return $this->render('admin/dashboard.html.twig', [
@@ -45,6 +48,11 @@ class AdminController extends AbstractController
             'total_categories' => $totalCategories,
             'total_orders' => $totalOrders,
             'total_customers' => $totalCustomers,
+            'total_revenue' => $totalRevenue,
+            'sales_chart_labels' => array_column($dailyRevenue, 'day'),
+            'sales_chart_values' => array_column($dailyRevenue, 'total'),
+            'revenue_chart_labels' => array_column($monthlyRevenue, 'month'),
+            'revenue_chart_values' => array_column($monthlyRevenue, 'total'),
             'recent_activities' => $recentActivities,
         ]);
     }

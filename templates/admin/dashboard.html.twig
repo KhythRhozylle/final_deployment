@@ -557,10 +557,10 @@
             new Chart(salesCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    labels: {{ sales_chart_labels|default(['Mon','Tue','Wed','Thu','Fri','Sat','Sun'])|json_encode|raw }},
                     datasets: [{
                         label: 'Sales',
-                        data: [1200, 1900, 1500, 2200, 1800, 2400, 2100],
+                        data: {{ sales_chart_values|default([0,0,0,0,0,0,0])|json_encode|raw }},
                         borderColor: chartColors.primary,
                         backgroundColor: 'rgba(26, 26, 26, 0.05)',
                         tension: 0.4,
@@ -656,10 +656,10 @@
             new Chart(revenueCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+                    labels: {{ revenue_chart_labels|default(['Jan','Feb','Mar','Apr','May','Jun'])|json_encode|raw }},
                     datasets: [{
                         label: 'Revenue (₱)',
-                        data: [45000, 52000, 48000, 61000, 55000, 67000],
+                        data: {{ revenue_chart_values|default([0,0,0,0,0,0])|json_encode|raw }},
                         backgroundColor: chartColors.primary,
                         borderColor: chartColors.primary,
                         borderWidth: 0,

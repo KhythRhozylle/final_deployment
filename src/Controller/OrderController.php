@@ -120,6 +120,64 @@ final class OrderController extends AbstractController
         return $this->redirectToRoute('app_order_index');
     }
 
+    #[Route('/{id}/accept', name: 'app_order_accept', methods: ['POST'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function acceptOrder(
+        Order $order,
+        Request $request,
+        OrderApprovalService $orderApprovalService,
+        ActivityLogService $logService,
+    ): Response {
+        if (!$this->isCsrfTokenValid('approve_order', $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Invalid security token. Please try again.');
+
+            return $this->redirectToRoute('app_order_index');
+        }
+
+        try {
+            $count = $orderApprovalService->acceptOrder($order, $this->getUser());
+            $logService->logUpdate($this->getUser(), 'Order', $order->getId(), [
+                'action' => 'accepted',
+                'lines' => (string) $count,
+                'orderGroupId' => $order->getOrderGroupId() ?? '',
+            ]);
+            $this->addFlash('success', sprintf('Order accepted (%d item(s)). Customer will see "Order has been placed".', $count));
+        } catch (\InvalidArgumentException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_order_index');
+    }
+
+    #[Route('/{id}/cancel', name: 'app_order_cancel', methods: ['POST'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function cancelOrder(
+        Order $order,
+        Request $request,
+        OrderApprovalService $orderApprovalService,
+        ActivityLogService $logService,
+    ): Response {
+        if (!$this->isCsrfTokenValid('cancel_order', $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Invalid security token. Please try again.');
+
+            return $this->redirectToRoute('app_order_index');
+        }
+
+        try {
+            $count = $orderApprovalService->cancelOrder($order);
+            $logService->logUpdate($this->getUser(), 'Order', $order->getId(), [
+                'action' => 'cancelled',
+                'lines' => (string) $count,
+                'orderGroupId' => $order->getOrderGroupId() ?? '',
+            ]);
+            $this->addFlash('success', sprintf('Order cancelled (%d item(s)). Customer will see "Order cancelled".', $count));
+        } catch (\InvalidArgumentException $e) {
+            $this->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_order_index');
+    }
+
     #[Route('/new', name: 'app_order_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager, ActivityLogService $logService, ProductRepository $productRepository): Response
     {

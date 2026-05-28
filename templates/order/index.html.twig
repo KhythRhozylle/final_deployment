@@ -520,15 +520,15 @@
         </div>
         <div class="stat-box pending">
             <h3>Pending</h3>
-            <p class="stat-value">{{ orders|filter(o => o.status|lower == 'pending')|length }}</p>
+            <p class="stat-value">{{ orders|filter(o => (o.status ?? '')|lower == 'pending')|length }}</p>
         </div>
         <div class="stat-box completed">
             <h3>Completed</h3>
-            <p class="stat-value">{{ orders|filter(o => o.status|lower == 'completed')|length }}</p>
+            <p class="stat-value">{{ orders|filter(o => (o.status ?? '')|lower in ['completed', 'delivered', 'confirmed'])|length }}</p>
         </div>
         <div class="stat-box cancelled">
             <h3>Cancelled</h3>
-            <p class="stat-value">{{ orders|filter(o => o.status|lower == 'cancelled')|length }}</p>
+            <p class="stat-value">{{ orders|filter(o => (o.status ?? '')|lower in ['cancelled', 'rejected'])|length }}</p>
         </div>
     </div>
 
@@ -541,7 +541,7 @@
         {% for group in pendingMobileGroups %}
         <div class="mobile-order-row">
             <div>
-                <strong>{{ group.customer.name|default('Customer') }}</strong>
+                <strong>{% if group.customer %}{{ group.customer.name|default('Customer') }}{% else %}Customer{% endif %}</strong>
                 <span class="source-badge">Mobile app</span>
                 <div style="font-size: 0.8rem; color: #666; margin-top: 4px;">
                     {{ group.lines|length }} item(s) · ₱{{ group.total|number_format(2) }}
@@ -602,10 +602,10 @@
                         <td><span class="price">₱{{ order.price|number_format(2) }}</span></td>
                         <td>
                             <div class="status-cell">
-                                <span class="status-badge {{ order.status|lower }}">
-                                    {{ order.status }}
+                                <span class="status-badge {{ (order.status ?? 'pending')|lower|replace({' ': '_'}) }}">
+                                    {{ order.status ?? 'Pending' }}
                                 </span>
-                                {% if is_granted('ROLE_ADMIN') and order.status|lower == 'pending' %}
+                                {% if is_granted('ROLE_ADMIN') and (order.status ?? '')|lower == 'pending' %}
                                     <div class="status-actions">
                                         <form method="post" action="{{ path('app_order_accept', { id: order.id }) }}" style="display:inline;">
                                             <input type="hidden" name="_token" value="{{ csrf_token('approve_order') }}">
@@ -682,7 +682,7 @@
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
                 order: [[0, 'desc']], // Sort by Order ID descending
                 columnDefs: [
-                    { orderable: false, targets: [6, 8] }
+                    { orderable: false, targets: [9] }
                 ],
                 language: {
                     search: "Search Orders:",
